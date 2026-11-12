@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Buying Center Journey — Bosch × Weiland Bau</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root{
+    --bg:#0b0d10;
+    --panel:#13161b;
+    --panel-2:#1a1f26;
+    --line:#232933;
+    --ink:#e7ebf0;
+    --ink-dim:#9aa3af;
+    --ink-faint:#6b7380;
+    --accent:#4ea3ff;
+    --dm:#ff6b6b;        /* Decision Maker */
+    --champion:#4ade80;  /* Champion */
+    --influencer:#fbbf24;/* Influencer */
+    --blocker:#f87171;   /* Blocker */
+    --unknown:#94a3b8;   /* Unknown */
+    --signal-bg:#fff3b0;
+    --signal-ink:#4a3a00;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif;line-height:1.55}
+  .wrap{max-width:1180px;margin:0 auto;padding:40px 24px 120px}
+  header{padding:28px 0 20px;border-bottom:1px solid var(--line);margin-bottom:28px}
+  h1{font-size:30px;margin:0 0 6px;letter-spacing:-.015em}
+  .sub{color:var(--ink-dim);font-size:15px;max-width:780px}
+  .tag{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase}
+  .tag-dm{background:rgba(255,107,107,.15);color:#ffb3b3;border:1px solid rgba(255,107,107,.35)}
+  .tag-champion{background:rgba(74,222,128,.13);color:#9af7b7;border:1px solid rgba(74,222,128,.35)}
+  .tag-influencer{background:rgba(251,191,36,.13);color:#ffd977;border:1px solid rgba(251,191,36,.35)}
+  .tag-blocker{background:rgba(248,113,113,.13);color:#ffb0b0;border:1px solid rgba(248,113,113,.35)}
+  .tag-unknown{background:rgba(148,163,184,.13);color:#cbd5e1;border:1px solid rgba(148,163,184,.35)}
+  .tag-conf{background:var(--panel-2);color:var(--ink-dim);border:1px solid var(--line);margin-left:6px}
+  nav.jump{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 10px}
+  nav.jump a{color:var(--ink-dim);text-decoration:none;font-size:13px;padding:6px 11px;border:1px solid var(--line);border-radius:7px;background:var(--panel)}
+  nav.jump a:hover{color:var(--ink);border-color:#3a4150}
+  section{margin:44px 0}
+  h2{font-size:21px;margin:0 0 14px;letter-spacing:-.01em}
+  h3{font-size:16px;margin:0 0 8px;color:var(--ink)}
+  p{margin:0 0 12px;color:var(--ink-dim)}
+  p strong{color:var(--ink)}
+  .deal-box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 22px}
+  .deal-box p{color:var(--ink);font-size:15px;margin-bottom:0}
+  .deal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
+  .deal-grid div{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+  .deal-grid span{display:block;color:var(--ink-faint);font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+  .deal-grid b{color:var(--ink);font-size:14px;font-weight:600}
+
+  /* Personas */
+  .personas{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+  .persona{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;cursor:pointer;transition:transform .12s,border-color .12s}
+  .persona:hover{border-color:#3a4150;transform:translateY(-1px)}
+  .persona .name{font-weight:600;font-size:15px;margin-bottom:2px}
+  .persona .title{color:var(--ink-dim);font-size:12px;margin-bottom:10px}
+  .persona .meta{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .persona .case{font-size:11px;color:var(--ink-faint);margin-top:6px}
+
+  /* Timeline */
+  .timeline{position:relative;padding-left:26px;margin-top:20px;border-left:2px solid var(--line)}
+  .event{position:relative;margin-bottom:22px}
+  .event::before{
+    content:"";position:absolute;left:-33px;top:6px;width:12px;height:12px;border-radius:50%;
+    background:var(--panel);border:2px solid var(--accent)
+  }
+  .event.email::before{border-color:var(--accent)}
+  .event.visit::before{border-color:var(--champion)}
+  .event.appointment::before{border-color:var(--influencer)}
+  .event .when{font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em}
+  .event .what{margin-top:2px;color:var(--ink);font-size:15px;font-weight:500}
+  .event .kind{display:inline-block;margin-right:8px;font-size:11px;padding:2px 7px;border-radius:5px;background:var(--panel-2);color:var(--ink-dim);border:1px solid var(--line);text-transform:uppercase;letter-spacing:.04em}
+
+  /* Artifacts */
+  details.artifact{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:12px;overflow:hidden}
+  details.artifact[open]{border-color:#3a4150}
+  details.artifact>summary{list-style:none;padding:14px 18px;cursor:pointer;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  details.artifact>summary::-webkit-details-marker{display:none}
+  details.artifact>summary:hover{background:var(--panel-2)}
+  .art-kind{font-size:11px;padding:3px 8px;border-radius:5px;letter-spacing:.04em;text-transform:uppercase;font-weight:600}
+  .art-kind.email{background:rgba(78,163,255,.15);color:#8cc0ff;border:1px solid rgba(78,163,255,.3)}
+  .art-kind.appt{background:rgba(251,191,36,.12);color:#ffd977;border:1px solid rgba(251,191,36,.3)}
+  .art-kind.visit{background:rgba(74,222,128,.12);color:#9af7b7;border:1px solid rgba(74,222,128,.3)}
+  .art-date{color:var(--ink-faint);font-size:12px}
+  .art-title{color:var(--ink);font-size:15px;font-weight:500}
+  .art-body{padding:4px 22px 22px;border-top:1px solid var(--line);background:#0f1217}
+  .art-meta{color:var(--ink-faint);font-size:12px;margin:12px 0 10px}
+  .art-content{white-space:pre-wrap;font-family:"SF Mono",ui-monospace,monospace;font-size:13px;line-height:1.65;color:var(--ink);background:var(--panel-2);padding:16px 18px;border-radius:8px;border:1px solid var(--line)}
+  .signal{background:var(--signal-bg);color:var(--signal-ink);padding:1px 4px;border-radius:3px;position:relative;cursor:help;font-weight:600}
+  .signal:hover{background:#ffea70}
+  .signal[data-tip]::after{
+    content:attr(data-tip);
+    position:absolute;left:0;top:calc(100% + 6px);min-width:260px;max-width:360px;
+    background:#fff8e1;color:#4a3a00;padding:8px 10px;border-radius:6px;font-size:12px;line-height:1.45;
+    font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .15s;
+    z-index:20;white-space:normal
+  }
+  .signal:hover[data-tip]::after{opacity:1}
+
+  .callout{margin-top:14px;background:#1b1a0f;border-left:3px solid var(--influencer);padding:10px 14px;border-radius:6px;color:#f5e9b5;font-size:13px}
+  .callout b{color:#fff}
+  .callout ul{margin:6px 0 0;padding-left:18px}
+  .callout li{margin:3px 0}
+
+  /* Expected table */
+  table.expected{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+  table.expected th,table.expected td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.expected th{color:var(--ink-faint);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+  table.expected tr:hover td{background:var(--panel)}
+  code.q{background:var(--panel-2);padding:2px 6px;border-radius:4px;color:#c7d2fe;font-family:"SF Mono",ui-monospace,monospace;font-size:12px}
+
+  /* Filter chips */
+  .filter{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 18px}
+  .filter button{background:var(--panel);border:1px solid var(--line);color:var(--ink-dim);padding:6px 13px;border-radius:999px;cursor:pointer;font-size:12px;font-family:inherit;transition:all .12s}
+  .filter button:hover{color:var(--ink);border-color:#3a4150}
+  .filter button.active{background:var(--accent);color:#06121f;border-color:var(--accent);font-weight:600}
+
+  footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);color:var(--ink-faint);font-size:12px}
+
+  @media (max-width:720px){
+    .deal-grid{grid-template-columns:repeat(2,1fr)}
+    h1{font-size:24px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Buying Center in Action — Bosch × Weiland Bau</h1>
+  <div class="sub">A full day-to-day journey of one sales opportunity, written so that you can see exactly what emails, appointment notes, and visit notes the AI role-determination feature will have to work with. Hover the <span class="signal" data-tip="Example of a signal highlight — real ones carry role + reasoning.">highlighted phrases</span> in each artifact to see which role signal they plant.</div>
+  <nav class="jump">
+    <a href="#deal">Deal snapshot</a>
+    <a href="#cast">Cast</a>
+    <a href="#timeline">Timeline</a>
+    <a href="#artifacts">Artifacts</a>
+    <a href="#expected">Expected AI output</a>
+    <a href="#testing">How to test</a>
+  </nav>
+</header>
+
+<section id="deal">
+  <h2>1. The deal, in one paragraph</h2>
+  <div class="deal-box">
+    <p><strong>Weiland Bau GmbH</strong> — a 70-year-old German construction firm — runs an aging, multi-brand cordless tool fleet across 14 sites. The new COO wants a single-vendor ecosystem, inventory tracking, and a 3-year framework. <strong>Bosch Power Tools</strong> is competing against two incumbents. Rep <strong>Lena Müller</strong> has been working the opportunity since September. Today is <strong>Nov 12, 2026</strong>. Proposal is in, board decision is Dec 10.</p>
+    <div class="deal-grid">
+      <div><span>Buyer</span><b>Weiland Bau GmbH</b></div>
+      <div><span>Seller</span><b>Bosch Power Tools</b></div>
+      <div><span>Deal value</span><b>€1.78M · 3 years</b></div>
+      <div><span>Rep</span><b>Lena Müller</b></div>
+      <div><span>Products</span><b>Pro 18V cordless · TrackMyTools · consignment</b></div>
+      <div><span>Opened</span><b>2026-09-02</b></div>
+      <div><span>Stage</span><b>4 — Proposal Submitted</b></div>
+      <div><span>Target close</span><b>2026-12-15</b></div>
+    </div>
+  </div>
+</section>
+
+<section id="cast">
+  <h2>2. The Buying Center — 7 Weiland contacts</h2>
+  <p>Each card shows the role the AI is <strong>expected</strong> to derive from the artifacts below, and the confidence it should land on. Two are deliberately ambiguous — Markus sits on the Decision Maker/Influencer boundary, and Thomas drifts from supportive to Blocker over 8 weeks.</p>
+  <div class="personas">
+    <div class="persona">
+      <div class="name">Dr. Katrin Weiland</div>
+      <div class="title">COO · Executive</div>
+      <div class="meta"><span class="tag tag-dm">Decision Maker</span><span class="tag tag-conf">High</span></div>
+      <div class="case">Clean. Textbook DM signals — budget, sign-off, ROI, "makes the call" language.</div>
+    </div>
+    <div class="persona">
+      <div class="name">Markus Berger</div>
+      <div class="title">Head of Procurement</div>
+      <div class="meta"><span class="tag tag-dm">Decision Maker</span><span class="tag tag-conf">Medium</span></div>
+      <div class="case">Borderline. Signs commercially, defers strategically. Tests DM vs. Influencer boundary.</div>
+    </div>
+    <div class="persona">
+      <div class="name">Sabine Hoffmann</div>
+      <div class="title">Fleet &amp; Tools Manager</div>
+      <div class="meta"><span class="tag tag-champion">Champion</span><span class="tag tag-conf">High</span></div>
+      <div class="case">Clean. Proactive introductions, "pushing internally", coaches rep before meetings.</div>
+    </div>
+    <div class="persona">
+      <div class="name">Thomas Keller</div>
+      <div class="title">Senior Site Manager, Region South</div>
+      <div class="meta"><span class="tag tag-blocker">Blocker</span><span class="tag tag-conf">Medium–High</span></div>
+      <div class="case">Shifts. Cautious in week 2 → active Blocker by week 7. Tests recent-signal weighting.</div>
+    </div>
+    <div class="persona">
+      <div class="name">Ingrid Novak</div>
+      <div class="title">Head of Occupational Safety</div>
+      <div class="meta"><span class="tag tag-influencer">Influencer</span><span class="tag tag-conf">High</span></div>
+      <div class="case">Clean. Defines domain evaluation criteria (HSE), "from my team's perspective".</div>
+    </div>
+    <div class="persona">
+      <div class="name">Rolf Dietrich</div>
+      <div class="title">IT Infrastructure Lead</div>
+      <div class="meta"><span class="tag tag-influencer">Influencer</span><span class="tag tag-conf">Medium</span></div>
+      <div class="case">Clean but light. Explicit domain scope disclaimer. Only 3 interactions.</div>
+    </div>
+    <div class="persona">
+      <div class="name">Peter Lang</div>
+      <div class="title">Workshop Foreman, Munich</div>
+      <div class="meta"><span class="tag tag-unknown">Unknown</span><span class="tag tag-conf">Low</span></div>
+      <div class="case">Edge case. 1 brief email, insufficient evidence. Tests the "Unknown" path (AC #9).</div>
+    </div>
+  </div>
+</section>
+
+<section id="timeline">
+  <h2>3. Timeline of the deal</h2>
+  <div class="timeline">
+    <div class="event email"><div class="when">Week 1 · Sep 09</div><div class="what"><span class="kind">Email</span>Lena → Sabine — first intro follow-up</div></div>
+    <div class="event appointment"><div class="when">Week 2 · Sep 15</div><div class="what"><span class="kind">Appointment</span>Discovery call — Sabine + Thomas</div></div>
+    <div class="event email"><div class="when">Week 3 · Sep 23</div><div class="what"><span class="kind">Email</span>Sabine → Lena — introducing Ingrid (HSE)</div></div>
+    <div class="event visit"><div class="when">Week 4 · Sep 30</div><div class="what"><span class="kind">Visit</span>Stuttgart HQ — first meeting with Katrin</div></div>
+    <div class="event email"><div class="when">Week 5 · Oct 07</div><div class="what"><span class="kind">Email</span>Lena → Katrin — business case</div></div>
+    <div class="event appointment"><div class="when">Week 6 · Oct 14</div><div class="what"><span class="kind">Appointment</span>IT sync with Rolf</div></div>
+    <div class="event visit"><div class="when">Week 7 · Oct 21</div><div class="what"><span class="kind">Visit</span>Munich site demo — things go sideways</div></div>
+    <div class="event email"><div class="when">Week 8 · Oct 28</div><div class="what"><span class="kind">Email</span>Thomas → Sabine cc Lena — formal pushback</div></div>
+    <div class="event email"><div class="when">Week 9 · Nov 04</div><div class="what"><span class="kind">Email</span>Markus → Lena — commercial Qs</div></div>
+    <div class="event appointment"><div class="when">Week 9 · Nov 05</div><div class="what"><span class="kind">Appointment</span>Commercial deep-dive — Markus + Katrin</div></div>
+    <div class="event email"><div class="when">Week 10 · Nov 10</div><div class="what"><span class="kind">Email</span>Lena → Katrin — revised proposal submitted</div></div>
+    <div class="event visit"><div class="when">Week 10 · Nov 11</div><div class="what"><span class="kind">Visit</span>Hamburg HSE walkthrough with Ingrid</div></div>
+    <div class="event email"><div class="when">Week 10 · Nov 12 · TODAY</div><div class="what"><span class="kind">Email</span>Peter → Lena — one-line warranty question</div></div>
+  </div>
+</section>
+
+<section id="artifacts">
+  <h2>4. The artifacts — full content, exactly as it lands in the system</h2>
+  <p>Click to expand any artifact. Hover highlighted phrases to see which role signal they plant. These highlights are annotations for you — they don't exist in the real record.</p>
+
+  <div class="filter" id="filter">
+    <button class="active" data-f="all">All</button>
+    <button data-f="email">Emails</button>
+    <button data-f="appt">Appointments</button>
+    <button data-f="visit">Visits</button>
+  </div>
+
+  <!-- EMAIL 1 -->
+  <details class="artifact" data-type="email">
+    <summary><span class="art-kind email">Email 1</span><span class="art-date">2026-09-09 · Week 1</span><span class="art-title">Lena → Sabine — "Great to connect — next steps on the fleet review"</span></summary>
+    <div class="art-body">
+      <div class="art-meta">From Lena Müller &lt;lena.mueller@bosch.com&gt; · To Sabine Hoffmann &lt;s.hoffmann@weiland-bau.de&gt;</div>
+<div class="art-content">Hi Sabine,
+
+Thank you again for the call yesterday. It was really helpful to understand how your 14 sites run the current tool fleet, and especially the pain points <span class="signal" data-tip="Sabine framed as the proactive counterpart. Early Champion signal.">you shared</span> around the Munich workshop — batteries going missing between shifts is exactly the kind of problem our TrackMyTools service was built for.
+
+As promised, I've attached:
+- A one-pager on the Bosch Professional 18V ecosystem
+- A short deck on TrackMyTools (the 4-site pilot model is on slide 6)
+- Reference customer: Kraft Bau (similar size, went live in March)
+
+You mentioned <span class="signal" data-tip="Katrin signal → Decision Maker. Language: 'business case', 'driving from the COO office'. Even though Katrin is not a participant on this email, her role is being established through third-person framing.">Dr. Weiland is driving the fleet consolidation push from the COO office and will want to see a business case</span> before the end of October. Would it help if I prepared a 1-page total cost comparison for your internal discussion? I can have it ready by next Friday.
+
+Also — happy to come to Stuttgart and present to whoever you'd like me to meet. You know your organization better than I do. Who else should be in the room for the first deep-dive?
+
+Best,
+Lena Müller
+Bosch Power Tools | DACH Key Accounts</div>
+      <div class="callout"><b>Role signals in this email</b>
+        <ul>
+          <li><b>Katrin (DM):</b> "driving the fleet consolidation push from the COO office" + "business case" → Decision Maker language signals.</li>
+          <li><b>Sabine (Champion, early):</b> framed as the person inside Weiland who shares internal context with the rep.</li>
+        </ul>
+      </div>
+    </div>
+  </details>
+
+  <!-- APPOINTMENT 1 -->
+  <details class="artifact" data-type="appt">
+    <summary><span class="art-kind appt">Appointment 1</span><span class="art-date">2026-09-15 · Week 2 · 90 min</span><span class="art-title">Discovery call — Lena, Sabine, Thomas</span></summary>
+    <div class="art-body">
+      <div class="art-meta">Attendees: Lena Müller (Bosch) · Sabine Hoffmann · Thomas Keller · Author: Lena Müller</div>
+<div class="art-content">Good call. 90 min.
+
+<span class="signal" data-tip="Champion behavioral: proactive, prepared, driving the evaluation.">Sabine clearly running this evaluation day-to-day</span>. She has already mapped the current fleet across sites in a spreadsheet and shared it in advance. Mentioned twice that she's <span class="signal" data-tip="Champion language signal: 'I'm pushing for this internally' — direct phrase from the prompt's signal list.">"pushing internally for a single-vendor decision"</span> and that Katrin Weiland backs this direction.
+
+Thomas joined from Munich. More cautious. His Region South has invested heavily in a competitor ecosystem over the last 4 years and he mentioned twice that <span class="signal" data-tip="Blocker language signal: 'The current process works fine' — direct phrase from the prompt's Blocker signal list.">"the current setup works fine for my crews"</span> and asked whether battery compatibility would be lost mid-project. Not hostile, but <span class="signal" data-tip="Rep is explicitly naming the Blocker pattern they're observing.">defending status quo</span>. Need to win him over — he manages the largest site count.
+
+Key points:
+- Decision timeline: proposal due end of October, decision in November
+- <span class="signal" data-tip="Decision Maker language: 'signs off' → matches 'has to sign off' and 'makes the final call' signals.">Katrin signs off</span>. Markus Berger (procurement head) handles commercials
+- Sabine will loop in Ingrid from HSE next — safety certifications are a hard requirement for site rollouts
+- IT involvement expected (TrackMyTools cloud sync, SSO) — <span class="signal" data-tip="Champion behavioral: 'proactively introduces you to other stakeholders'.">Sabine will introduce me to Rolf Dietrich</span>
+- Thomas wants a hands-on demo at a Munich site with his foremen before he commits — scheduling that for October
+
+Action items:
+- Lena: send business case 1-pager by Sep 23
+- Sabine: intro email to Ingrid + Rolf this week
+- Lena: arrange Munich demo with Thomas's team for week of Oct 19</div>
+      <div class="callout"><b>Role signals in this note</b>
+        <ul>
+          <li><b>Sabine (Champion):</b> "pushing internally" + "already mapped the current fleet" + "will introduce me to Rolf". Three independent Champion behavioral signals.</li>
+          <li><b>Thomas (Blocker, early):</b> "the current setup works fine" is a direct Blocker phrase. The rep names the pattern ("defending status quo") too.</li>
+          <li><b>Katrin (DM):</b> "Katrin signs off".</li>
+          <li><b>Markus (hints of DM commercial scope):</b> "handles commercials".</li>
+        </ul>
+      </div>
+    </div>
+  </details>
+
+  <!-- EMAIL 2 -->
+  <details class="artifact" data-type="email">
+    <summary><span class="art-kind email">Email 2</span><span class="art-date">2026-09-23 · Week 3</span><span class="art-title">Sabine → Lena, cc Ingrid — introducing Ingrid (HSE)</span></summary>
+    <div class="art-body">
+      <div class="art-meta">From Sabine Hoffmann · To Lena Müller · cc Ingrid Novak</div>
+<div class="art-content">Hi Lena,
+
+As discussed, I'm introducing you to Ingrid Novak, our Head of Occupational Safety. Any site rollout we do has to clear her team's requirements — <span class="signal" data-tip="Influencer signal: Ingrid will shape evaluation criteria in her domain — 'defines or contributes to requirements, scorecards, or RFP criteria'.">she'll be a key voice in the evaluation, especially on the dust extraction, HAVS (hand-arm vibration), and lithium battery transport topics</span>.
+
+Ingrid — Lena from Bosch is who I mentioned in Monday's management call. She's preparing the fleet modernization proposal for us. Can you share with her the HSE criteria doc we use for vendor evaluation?
+
+Lena — the business case 1-pager you sent landed well internally. <span class="signal" data-tip="Champion behavioral: 'shares meeting notes, decks, or demos internally on your behalf'.">I shared it with Katrin yesterday</span> and <span class="signal" data-tip="DM signal: Katrin asked for a direct meeting — final-authority behavior.">she asked me to set up a direct meeting with you during her Stuttgart visit on Sep 30</span>. I'll send a calendar invite separately. <span class="signal" data-tip="Champion language: 'Between us...' is a direct phrase from the prompt's Champion signal list. Also 'coaches you before important meetings'.">Between us: she's more convinced about the tracking service than about changing the tools themselves, so lean into TrackMyTools in the meeting.</span>
+
+Also — Rolf (IT) will be in touch about SSO and data residency. Standard stuff, nothing scary.
+
+Best,
+Sabine</div>
+      <div class="callout"><b>Role signals in this email</b>
+        <ul>
+          <li><b>Sabine (Champion, very strong):</b> "I shared it with Katrin" + "Between us..." + coaching Lena on how to pitch to the COO. This email alone should push Sabine to High confidence.</li>
+          <li><b>Ingrid (Influencer):</b> "key voice in the evaluation", domain-specific scope.</li>
+          <li><b>Katrin (DM, indirect):</b> she asked for the meeting, she's weighing strategic fit between products.</li>
+        </ul>
+      </div>
+    </div>
+  </details>
+
+  <!-- VISIT 1 -->
+  <details class="artifact" data-type="visit">
+    <summary><span class="art-kind visit">Visit 1</span><span class="art-date">2026-09-30 · Week 4 · 60 min</span><span class="art-title">Stuttgart HQ — first meeting with Katrin</span></summary>
+    <div class="art-body">
+      <div class="art-meta">Katrin Weiland (COO), Sabine Hoffmann, Lena Müller · Author: Lena Müller</div>
+<div class="art-content">First face to face with Katrin. Sharp, direct, no small talk. Her office, 45 min scheduled, ran 60.
+
+Katrin opened by saying she has "approximately zero interest in which brand of drill the crews use" — her concern is <span class="signal" data-tip="DM language cluster: TCO, utilization, cost reduction, board.">TCO, utilization data, and whether Weiland can prove 15% cost reduction on tooling spend to the board by FY28</span>. Repeated the 15% number three times. That is the number.
+
+She asked:
+- <span class="signal" data-tip="DM language signal: 'total cost', 'total cost of ownership' — direct from the prompt.">"What is the total cost of ownership over 5 years including batteries?"</span>
+- <span class="signal" data-tip="DM behavioral: asks about risk.">"What's the risk if TrackMyTools has an outage during a project?"</span>
+- "Who else of your size has committed to this consignment model?"
+- <span class="signal" data-tip="DM behavioral: asks about long-term commitment.">"If we sign a 3-year framework and the technology changes, where does that leave us?"</span>
+
+She did NOT ask about product specs. Not once.
+
+She mentioned <span class="signal" data-tip="DM language: 'board decision' — direct from the prompt.">the board decision is scheduled for mid-December</span> and that she needs the full business case landed with the CFO by end of November. Said <span class="signal" data-tip="DM language cluster, textbook: 'makes the final call' + 'authorized to proceed' + explicit conditional on Markus for commercial signoff.">"I will make the call on this, but I will not make it without Markus's commercial sign-off."</span>
+
+Sabine was quiet during the meeting — deliberately, I think. Let Katrin drive. On the walk back to the lobby <span class="signal" data-tip="Champion behavioral: 'gives insider context on org politics'.">Sabine said "that was about as positive as Katrin gets, she liked you."</span>
+
+Next step: I prepare the full business case (TCO + risk mitigation section) and send by Oct 7. Katrin to review before the commercial meeting with Markus in November.
+
+One flag: Thomas is in Region South and was NOT mentioned once by Katrin. I don't think he's in her inner circle. But he has the Munich veto on the pilot sites. <span class="signal" data-tip="Blocker behavioral, named by Champion: 'deliberately slows the process'.">Sabine confirmed afterwards: "Thomas can't kill the deal but he can slow the pilot by 6 months, which is the same thing."</span></div>
+      <div class="callout"><b>Role signals in this note</b>
+        <ul>
+          <li><b>Katrin (DM, textbook):</b> five independent DM language/behavioral signals in one note. Confidence should be High.</li>
+          <li><b>Markus (DM commercial scope):</b> "I will not make it without Markus's commercial sign-off".</li>
+          <li><b>Sabine (Champion):</b> reads the room, flags Thomas risk, interprets COO's mood for the rep.</li>
+          <li><b>Thomas (Blocker, reinforced):</b> named as slowing the pilot — no direct quote from him here, but the Champion's description of his behavior is a strong indirect signal.</li>
+        </ul>
+      </div>
+    </div>
+  </details>
+
+  <!-- EMAIL 3 -->
+  <details class="artifact" data-type="email">
+    <summary><span class="art-kind email">Email 3</span><span class="art-date">2026-10-07 · Week 5</span><span class="art-title">Lena → Katrin, cc Sabine — business case</span></summary>
+    <div class="art-body">
+      <div class="art-meta">From Lena Müller · To Dr. Katrin Weiland · cc Sabine Hoffmann</div>
+<div class="art-content">Dear Dr. Weiland,
+
+Thank you again for your time last week. As discussed, please find attached the business case for the Bosch Professional fleet modernization and TrackMyTools rollout.
+
+Key points on slide 2:
+- 5-year TCO: €4.2M under current state, €3.5M under proposed state
+- Projected tool utilization lift: 23% (based on TrackMyTools customer cohort)
+- Estimated savings on tool loss / battery hoarding: €310K / year steady state
+- Projected cost reduction vs. current baseline: 16.8%
+
+On risk mitigation (slide 5): I've included a dedicated section on TrackMyTools uptime SLAs (99.5% contractual, 99.8% trailing 12 months), the offline fallback mode, and the contract exit clauses for the 3-year framework. Happy to walk through any of these in detail.
+
+I understand <span class="signal" data-tip="The shape of what the rep sends Katrin — TCO, ROI, risk, board decision — is itself a signal of who Katrin is in the deal.">the board decision is mid-December</span>. If helpful, I can be in Stuttgart the week of November 9 for a final review with you and Markus before the commercial lock-down.
+
+Best regards,
+Lena Müller
+Bosch Power Tools</div>
+      <div class="callout"><b>Role signals in this email</b>
+        <ul>
+          <li><b>Katrin (DM):</b> the framing (TCO, ROI, risk mitigation, board decision) mirrors Decision Maker language throughout. Even without reading replies, who a rep writes a business case email to is signal.</li>
+        </ul>
+      </div>
+    </div>
+  </details>
+
+  <!-- APPOINTMENT 2 -->
+  <details class="artifact" data-type="appt">
+    <summary><span class="art-kind appt">Appointment 2</span><span class="art-date">2026-10-14 · Week 6 · 45 min</span><span class="art-title">IT sync with Rolf Dietrich</span></summary>
+    <div class="art-body">
+      <div class="art-meta">Rolf Dietrich, Lena Müller, Bosch Solution Engineer · Author: Lena Müller</div>
+<div class="art-content">Short technical call with Rolf. Mostly our SE answering questions.
+
+Rolf's scope:
+- SSO via Azure AD (standard, done it 50 times — no issue)
+- Data residency: he wants confirmation that TrackMyTools telemetry stays in EU. Confirmed yes, Frankfurt region.
+- Mobile device policy on jobsites — asked whether tool tags would need a Weiland-managed phone or work off reader hubs. We're doing hubs.
+- Asked about API access for pulling utilization data into their internal reporting. Yes, REST endpoints documented. He seemed happy with that.
+
+Rolf was pleasant, efficient, not pushing anything. Said <span class="signal" data-tip="Influencer behavioral, strong: he explicitly disclaims decision authority AND represents his department's point of view. Classic Influencer: 'The CTO asked me to evaluate this... based on what I've seen...'">"my role is to make sure nothing on the IT side blocks this — the business case is for Sabine and Katrin to make, not for me."</span> That's exactly right.
+
+He'll send his written technical requirements by Oct 18. Won't delay.</div>
+      <div class="callout"><b>Role signals in this note</b>
+        <ul>
+          <li><b>Rolf (Influencer):</b> one explicit quote that is almost a textbook Influencer statement — disclaims decision authority and scopes himself to IT domain. Volume is low though, so Medium confidence not High.</li>
+        </ul>
+      </div>
+    </div>
+  </details>
+
+  <!-- VISIT 2 -->
+  <details class="artifact" data-type="visit">
+    <summary><span class="art-kind visit">Visit 2</span><span class="art-date">2026-10-21 · Week 7 · 3h</span><span class="art-title">Munich site demo — things go sideways</span></summary>
+    <div class="art-body">
+      <div class="art-meta">Thomas Keller + 4 foremen + 2 crew leads · Lena Müller + Bosch demo tech · Author: Lena Müller</div>
+<div class="art-content">Mixed day. Not great.
+
+Workshop part went fine. Crews liked the 18V ProCORE batteries, feedback on the GSB 18V-150 drill was positive, foremen made jokes about swapping their current batteries for Bosch ones. Good engagement.
+
+Jobsite part — rough. We'd set up TrackMyTools at the Garching site for the demo. One of the reader hubs lost power during the walkthrough and for about 20 min none of the tagged tools showed up on the live dashboard. <span class="signal" data-tip="Blocker behavioral: 'raises repeated objections', and here specifically — publicly undermines the solution in front of his team.">Thomas pointed at this twice in front of his foremen and said "and this is what you want us to rely on across 14 sites?"</span>
+
+The battery exchange program with the existing competitor stock also came up and <span class="signal" data-tip="Blocker behavioral: 'disputes ROI calculations' + 'advocates for the status quo'.">Thomas challenged me publicly — "we spent €180K on [competitor] batteries in 2024 alone, are you suggesting we throw that away?"</span> I had an answer but it clearly didn't land.
+
+He walked me back to the car afterward. His tone was polite but he said, twice, <span class="signal" data-tip="Blocker language signal — direct phrase from the prompt: 'I'm not sure this is the right time'. Also 'delay the process'.">"I'm not sure this is the right time for us to switch — maybe start with one region, not Region South."</span> That's a direct quote.
+
+My read: he started neutral in September, now he's actively looking for reasons to delay. Battery sunk cost is real; the hub outage during the demo was a gift to his argument. I need Sabine to help here. Also need to brief Katrin before she hears this from Thomas's own chain.
+
+Follow-up:
+- Debrief with Sabine on Oct 23
+- Send Thomas the battery transition buyback proposal (we have one, I didn't lead with it) by Oct 24
+- Pre-brief Katrin verbally — not in writing — next time I'm in Stuttgart</div>
+      <div class="callout"><b>Role signals in this note</b>
+        <ul>
+          <li><b>Thomas (Blocker, full commitment):</b> three independent Blocker language/behavioral signals — public objection, ROI dispute, "I'm not sure this is the right time". This is where the drift completes.</li>
+          <li><b>Signal-weighting test:</b> if the AI reads only Appointment 1 (Thomas sounds cautious), Thomas = Blocker Low or Neutral. With Visit 2 added, Thomas = Blocker Medium–High. Dev team can toggle this record on/off to verify recency weighting.</li>
+        </ul>
+      </div>
+    </div>
+  </details>
+
+  <!-- EMAIL 4 -->
+  <details class="artifact" data-type="email">
+    <summary><span class="art-kind email">Email 4</span><span class="art-date">2026-10-28 · Week 8</span><span class="art-title">Thomas → Sabine, cc Lena — formal pushback</span></summary>
+    <div class="art-body">
+      <div class="art-meta">From Thomas Keller · To Sabine Hoffmann · cc Lena Müller</div>
+<div class="art-content">Sabine,
+
+Writing to you directly because <span class="signal" data-tip="Blocker behavioral: 'escalates concerns upward without discussing with you first' — Thomas goes to Sabine rather than to Lena even though Lena ran the demo.">I think we're moving too fast on this</span>.
+
+I've got <span class="signal" data-tip="Blocker language signal — direct phrase from the prompt: 'There are serious concerns about...'">serious concerns</span> about the Munich demo. The tracking system went down in front of my foremen — that's not a good look when you're asking crews to change their entire toolset. My guys came away sceptical, and honestly so did I.
+
+Three things I need before Region South signs up for any pilot:
+
+1. A written explanation of what happened with the hub outage and what the recovery process is when this happens on an active site.
+2. A full cost accounting of what we do with the €180K of existing battery stock. "Buyback" is fine as a word, I want numbers.
+3. <span class="signal" data-tip="Blocker behavioral: 'deliberately slows the process' + 'advocates for alternatives'.">A phased approach — not Region South first. Start with a smaller region where the risk is lower. Hamburg or Dresden make more sense.</span>
+
+I know Dr. Weiland and procurement have momentum on this, but <span class="signal" data-tip="Blocker behavioral: 'disputes ROI calculations' — reframes the business case to rest on his assent.">the business case rests on sites like mine actually running the pilot. If it doesn't work in Region South it doesn't work, period.</span>
+
+Lena — I'm copying you so this isn't behind your back. Happy to discuss.
+
+Thomas</div>
+      <div class="callout"><b>Role signals in this email</b>
+        <ul>
+          <li><b>Thomas (Blocker, confirmed in writing):</b> "serious concerns" + "moving too fast" + demand for phased delay + reframing of business case to require his agreement. This written objection is the single densest Blocker evidence in the record.</li>
+        </ul>
+      </div>
+    </div>
+  </details>
+
+  <!-- EMAIL 5 -->
+  <details class="artifact" data-type="email">
+    <summary><span class="art-kind email">Email 5</span><span class="art-date">2026-11-04 · Week 9</span><span class="art-title">Markus → Lena — commercial Qs ahead of Nov 5 meeting</span></summary>
+    <div class="art-body">
+      <div class="art-meta">From Markus Berger · To Lena Müller</div>
+<div class="art-content">Dear Lena,
+
+Ahead of our meeting tomorrow with Dr. Weiland, I would like to pre-share the commercial items we will cover:
+
+1. Pricing structure — breakdown of the 3-year framework per product category (tools, batteries, TrackMyTools subscription, services)
+2. Discount ladder based on consumption volume
+3. Payment terms (<span class="signal" data-tip="DM commercial-authority signal: sets terms non-negotiably.">we require 60-day net minimum</span>)
+4. Service levels, penalty clauses, and exit conditions
+5. Liability caps on TrackMyTools downtime
+
+<span class="signal" data-tip="Influencer signal — defers final approval to Katrin. This is the counter-weight to the DM signals above. Model should flag this as borderline.">Dr. Weiland has asked me to validate all commercial clauses before she approves.</span> I expect to need approximately two weeks after the meeting to run the final numbers past our CFO and legal. If we align tomorrow, I can confirm the commercial envelope by Nov 18 and we can sign the framework by Nov 30.
+
+For context — <span class="signal" data-tip="DM commercial-authority signal: sets envelope.">we will not sign on open price lists. Everything must be locked in the framework.</span>
+
+Best regards,
+Markus Berger
+Head of Procurement, Weiland Bau GmbH</div>
+      <div class="callout"><b>Role signals in this email — Markus is the borderline case</b>
+        <ul>
+          <li><b>For DM:</b> "we require 60-day net minimum", "we will not sign on open price lists" — sets terms.</li>
+          <li><b>For Influencer:</b> "Dr. Weiland has asked me to validate all commercial clauses before she approves" — explicit deference on final authority.</li>
+          <li><b>Expected AI output:</b> Decision Maker Medium OR Influencer High — both defensible. Evidence snippets matter more than the label.</li>
+        </ul>
+      </div>
+    </div>
+  </details>
+
+  <!-- APPOINTMENT 3 -->
+  <details class="artifact" data-type="appt">
+    <summary><span class="art-kind appt">Appointment 3</span><span class="art-date">2026-11-05 · Week 9 · 2h</span><span class="art-title">Commercial deep-dive — Katrin + Markus</span></summary>
+    <div class="art-body">
+      <div class="art-meta">Katrin Weiland, Markus Berger, Lena Müller, Bosch commercial lead · Author: Lena Müller</div>
+<div class="art-content">Good meeting. Long. Two main points.
+
+1. Commercials — Markus drove the first 90 min. He went through every clause with a highlighter, pushed hard on the 60-day payment terms (we held at 45), negotiated the TrackMyTools subscription down 8% against volume commitment. He's thorough. <span class="signal" data-tip="Influencer signal: defers final decision. Rep is explicitly noting the pattern.">He is not making the decision — he said twice "I need to come back to Dr. Weiland on this" — but nothing goes through without him.</span>
+
+2. Thomas situation — Katrin brought this up herself in the last 30 min. She had seen Thomas's email. <span class="signal" data-tip="DM signal cluster, exceptional strength: 'strategic direction', 'final say', 'makes the final call' — all in one quote.">Her words (close quote): "Thomas's job is to run Region South profitably. My job is to decide what Weiland Bau's tool strategy looks like for the next decade. These are not the same job and I will not confuse them."</span> She asked Lena directly whether we could structure the pilot to start in Hamburg instead of Munich, "to give Thomas less to shout about." I said yes.
+
+Katrin also confirmed: <span class="signal" data-tip="DM language: 'board decision'.">board decision Dec 10</span>, signing Dec 15, rollout start Q1 2027. <span class="signal" data-tip="Champion signal: trusted enough to be named as program owner in the contract.">She wants Sabine named as program owner in the contract.</span>
+
+Follow-ups:
+- Lena: revised proposal with Hamburg-first pilot, by Nov 10
+- Markus: CFO + legal review Nov 11–18
+- Katrin: brief the CEO Nov 25</div>
+      <div class="callout"><b>Role signals in this note</b>
+        <ul>
+          <li><b>Katrin (DM, strongest evidence in the record):</b> "My job is to decide what Weiland Bau's tool strategy looks like for the next decade" — one quote that hits multiple DM signals at once.</li>
+          <li><b>Markus (Influencer-leaning):</b> "I need to come back to Dr. Weiland on this" + "nothing goes through without him" — both signals in the same record. Model should tilt borderline toward Influencer here.</li>
+          <li><b>Sabine (Champion):</b> trusted post-signature program ownership.</li>
+        </ul>
+      </div>
+    </div>
+  </details>
+
+  <!-- EMAIL 6 -->
+  <details class="artifact" data-type="email">
+    <summary><span class="art-kind email">Email 6</span><span class="art-date">2026-11-10 · Week 10</span><span class="art-title">Lena → Katrin, cc Markus, Sabine — revised proposal</span></summary>
+    <div class="art-body">
+      <div class="art-meta">From Lena Müller · To Dr. Katrin Weiland · cc Markus Berger, Sabine Hoffmann</div>
+<div class="art-content">Dear Dr. Weiland,
+
+As agreed on Nov 5, please find the revised proposal attached.
+
+Key changes from the previous version:
+- Pilot sites changed: Hamburg, Dresden, Frankfurt, Stuttgart (previously Munich was included — now moved to phase 2)
+- Battery buyback program for existing competitor stock: €95K credit against year-1 invoicing, documented in Appendix C
+- Hub redundancy: dual-hub configuration included at the 4 pilot sites as standard (no price impact — direct response to the Munich site feedback)
+- Payment terms: 45 days (agreed with Markus on Nov 5)
+- TrackMyTools subscription: adjusted pricing per volume ladder (agreed with Markus on Nov 5)
+
+Final commercial envelope: €1.78M over 3 years, €95K buyback credit, 45-day payment, 99.5% SLA with 99.8% target.
+
+Markus — the full commercial annex is in section 4.
+Sabine — the program owner clause and the operational handover plan are in section 7.
+
+I understand the board decision is scheduled for Dec 10. If you would like a final in-person review before then, I am available in Stuttgart any day between Nov 24 and Dec 2.
+
+Best regards,
+Lena Müller</div>
+      <div class="callout"><b>Role signals in this email</b>
+        <ul>
+          <li>The <i>shape</i> of this email is a signal: addressed to Katrin (DM), Markus (commercial — Influencer/DM), Sabine (Champion) — each with a personally scoped section callout. The rep's own mental model of the Buying Center is visible in the structure.</li>
+        </ul>
+      </div>
+    </div>
+  </details>
+
+  <!-- VISIT 3 -->
+  <details class="artifact" data-type="visit">
+    <summary><span class="art-kind visit">Visit 3</span><span class="art-date">2026-11-11 · Week 10 · 2h</span><span class="art-title">Hamburg HSE walkthrough with Ingrid</span></summary>
+    <div class="art-body">
+      <div class="art-meta">Ingrid Novak (Weiland HSE), Lena Müller, site safety officer · Author: Lena Müller</div>
+<div class="art-content">Full on-site walkthrough of the Hamburg pilot location with Ingrid and her site safety colleague. Very detailed.
+
+Ingrid's agenda, which she had pre-printed:
+- <span class="signal" data-tip="Influencer behavioral: 'defines or contributes to requirements, scorecards'.">HAVS exposure monitoring — how does TrackMyTools track trigger-time per operator?</span> Answer: via tool-level accelerometer data, operator tagged on checkout
+- Dust extraction class compliance per tool — she has a list of 18 tools and wants to confirm each one against the German TRGS 559 rules
+- Battery charging station placement — fire regulations, max 30 Ah per cabinet unless rated. We're fine.
+- Hand injury statistics — she asked whether TrackMyTools data could feed into their H&S reporting. Yes, documented API.
+
+Her feedback at the end was: <span class="signal" data-tip="Influencer language signal — direct phrase from the prompt: 'From my team's perspective...'">"From my team's perspective this is better than what we currently have</span> — the HAVS tracking in particular is the first time I've seen a tool vendor take it seriously. But <span class="signal" data-tip="Influencer behavioral: conditional support based on domain requirements.">my support is conditional on the HAVS data staying with us and not being aggregated cross-customer."</span> Reasonable. Noted.
+
+She is not going to block the deal. <span class="signal" data-tip="Influencer behavioral: 'defines the HSE section of the framework and site rollout conditions'.">She is going to define the HSE section of the framework and the site rollout conditions.</span> That's exactly the right role for her.</div>
+      <div class="callout"><b>Role signals in this note</b>
+        <ul>
+          <li><b>Ingrid (Influencer, textbook):</b> "From my team's perspective" is a direct Influencer language signal from the prompt. Conditional support, domain-scoped criteria.</li>
+        </ul>
+      </div>
+    </div>
+  </details>
+
+  <!-- EMAIL 7 -->
+  <details class="artifact" data-type="email">
+    <summary><span class="art-kind email">Email 7</span><span class="art-date">2026-11-12 · TODAY</span><span class="art-title">Peter → Lena — battery warranty question</span></summary>
+    <div class="art-body">
+      <div class="art-meta">From Peter Lang · To Lena Müller</div>
+<div class="art-content">Hi,
+
+What's the warranty on the 8Ah ProCORE batteries? One of my guys said 3 years, website shows 2. Which is right?
+
+Thanks,
+Peter
+Munich workshop</div>
+      <div class="callout"><b>Role signals in this email</b>
+        <ul>
+          <li><b>Peter (Unknown):</b> 11 words, zero role language, no other interactions. Acceptance criterion #9: "If insufficient interaction data exists for a contact, the system returns 'Unknown' with Low confidence — no role is force-assigned." If the AI assigns Peter any role above Low, the implementation is wrong.</li>
+        </ul>
+      </div>
+    </div>
+  </details>
+
+</section>
+
+<section id="expected">
+  <h2>5. What the Buying Center should look like after role determination runs</h2>
+  <table class="expected">
+    <thead>
+      <tr><th>Contact</th><th>AI Role</th><th>Confidence</th><th>Expected top evidence snippets</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><b>Katrin Weiland</b></td><td><span class="tag tag-dm">Decision Maker</span></td><td>High</td><td><code class="q">"I will make the call on this"</code> (Visit 1) · <code class="q">"My job is to decide what Weiland Bau's tool strategy looks like for the next decade"</code> (Appt 3)</td></tr>
+      <tr><td><b>Markus Berger</b></td><td><span class="tag tag-dm">DM</span> <i>or</i> <span class="tag tag-influencer">Influencer</span></td><td>Medium</td><td><code class="q">"We will not sign on open price lists"</code> (Email 5) · <code class="q">"I need to come back to Dr. Weiland on this"</code> (Appt 3)</td></tr>
+      <tr><td><b>Sabine Hoffmann</b></td><td><span class="tag tag-champion">Champion</span></td><td>High</td><td><code class="q">"pushing internally for a single-vendor decision"</code> (Appt 1) · <code class="q">"Between us: she's more convinced about the tracking service... lean into TrackMyTools"</code> (Email 2)</td></tr>
+      <tr><td><b>Thomas Keller</b></td><td><span class="tag tag-blocker">Blocker</span></td><td>Medium–High</td><td><code class="q">"I'm not sure this is the right time"</code> (Visit 2) · <code class="q">"serious concerns"</code> + <code class="q">"we're moving too fast"</code> (Email 4)</td></tr>
+      <tr><td><b>Ingrid Novak</b></td><td><span class="tag tag-influencer">Influencer</span></td><td>High</td><td><code class="q">"From my team's perspective this is better than what we currently have"</code> (Visit 3) · <code class="q">"my support is conditional on..."</code> (Visit 3)</td></tr>
+      <tr><td><b>Rolf Dietrich</b></td><td><span class="tag tag-influencer">Influencer</span></td><td>Medium</td><td><code class="q">"my role is to make sure nothing on the IT side blocks this — the business case is for Sabine and Katrin to make, not for me"</code> (Appt 2)</td></tr>
+      <tr><td><b>Peter Lang</b></td><td><span class="tag tag-unknown">Unknown</span></td><td>Low</td><td>Insufficient interaction data</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="testing">
+  <h2>6. How to test using this journey</h2>
+  <ol>
+    <li><strong>Seed the tenant.</strong> Create Weiland Bau GmbH as an account. Create the 7 contacts with the titles and departments shown above. Open the opportunity "Weiland — Fleet Modernization" with close date 2026-12-15 and value €1.8M.</li>
+    <li><strong>Load the interactions.</strong> For each artifact, create an Email / Appointment / Visit record in Sales Cloud V2 with the <code class="q">plainContent</code> or <code class="q">notes[]</code> shown, dated per the timeline. Link each to the Weiland account and the right contacts.</li>
+    <li><strong>Run role determination.</strong> Trigger the role suggestion job for the Weiland Buying Center.</li>
+    <li><strong>Compare against section 5.</strong> The AI output should match within one role shift on Markus. Evidence snippets must come from the right artifacts.</li>
+    <li><strong>Test the edge cases:</strong>
+      <ul>
+        <li>Remove all of Thomas's interactions. Re-run. Expected: Thomas → Unknown Low.</li>
+        <li>Remove only Visit 2 and Email 4. Re-run. Expected: Thomas shifts from Blocker to Influencer or Neutral — this tests recent-signal weighting.</li>
+        <li>Add a second 11-word email from Peter. Re-run. Expected: still Unknown, still Low.</li>
+      </ul>
+    </li>
+  </ol>
+</section>
+
+<footer>
+  Journey authored 2026-11-12 · Companion to <b>BuyingCenter_RoleDetermination_UserStory.md</b> and <b>BuyingCenter_RoleDetermination_PromptConstruction.md</b> · Owner: Yogesh Vijay
+</footer>
+
+</div>
+
+<script>
+  // Filter chips
+  const filterBar = document.getElementById('filter');
+  filterBar.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    for(const b of filterBar.querySelectorAll('button')) b.classList.remove('active');
+    btn.classList.add('active');
+    const f = btn.dataset.f;
+    for(const d of document.querySelectorAll('details.artifact')){
+      d.style.display = (f === 'all' || d.dataset.type === f) ? '' : 'none';
+    }
+  });
+
+  // Persona click → open artifacts where their name appears
+  document.querySelectorAll('.persona').forEach(card => {
+    card.addEventListener('click', () => {
+      const name = card.querySelector('.name').innerText.trim();
+      const target = document.getElementById('artifacts');
+      target.scrollIntoView({behavior:'smooth', block:'start'});
+      let first = null;
+      document.querySelectorAll('details.artifact').forEach(d => {
+        if(d.innerText.includes(name.split(' ').slice(-1)[0])){
+          d.open = true;
+          if(!first) first = d;
+        }
+      });
+    });
+  });
+</script>
+</body>
+</html>
