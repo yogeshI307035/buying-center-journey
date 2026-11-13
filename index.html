@@ -2,9 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Buying Center Journey — Bosch × Weiland Bau</title>
+<title>Buying Center — Bosch × Weiland Bau</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
+/* ----- Shared base (from roles) ----- */
+
   :root{
     --bg:#0b0d10;
     --panel:#13161b;
@@ -123,9 +125,182 @@
     .deal-grid{grid-template-columns:repeat(2,1fr)}
     h1{font-size:24px}
   }
+
+
+/* ----- Relationship-specific additions ----- */
+
+  :root{
+    --bg:#0b0d10;
+    --panel:#13161b;
+    --panel-2:#1a1f26;
+    --line:#232933;
+    --ink:#e7ebf0;
+    --ink-dim:#9aa3af;
+    --ink-faint:#6b7380;
+    --accent:#4ea3ff;
+    --dm:#ff6b6b;
+    --champion:#4ade80;
+    --influencer:#fbbf24;
+    --blocker:#f87171;
+    --unknown:#94a3b8;
+    --edge-initial:#4ade80;
+    --edge-update:#8cc0ff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif;line-height:1.55}
+  .wrap{max-width:1180px;margin:0 auto;padding:40px 24px 120px}
+  header{padding:28px 0 20px;border-bottom:1px solid var(--line);margin-bottom:28px}
+  h1{font-size:30px;margin:0 0 6px;letter-spacing:-.015em}
+  .sub{color:var(--ink-dim);font-size:15px;max-width:820px}
+  .crumb{color:var(--ink-faint);font-size:12px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+  .crumb a{color:var(--accent);text-decoration:none}
+  .tag{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase}
+  .tag-dm{background:rgba(255,107,107,.15);color:#ffb3b3;border:1px solid rgba(255,107,107,.35)}
+  .tag-champion{background:rgba(74,222,128,.13);color:#9af7b7;border:1px solid rgba(74,222,128,.35)}
+  .tag-influencer{background:rgba(251,191,36,.13);color:#ffd977;border:1px solid rgba(251,191,36,.35)}
+  .tag-blocker{background:rgba(248,113,113,.13);color:#ffb0b0;border:1px solid rgba(248,113,113,.35)}
+  .tag-unknown{background:rgba(148,163,184,.13);color:#cbd5e1;border:1px solid rgba(148,163,184,.35)}
+  nav.jump{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 10px}
+  nav.jump a{color:var(--ink-dim);text-decoration:none;font-size:13px;padding:6px 11px;border:1px solid var(--line);border-radius:7px;background:var(--panel)}
+  nav.jump a:hover{color:var(--ink);border-color:#3a4150}
+  section{margin:44px 0}
+  h2{font-size:21px;margin:0 0 14px;letter-spacing:-.01em}
+  h3{font-size:16px;margin:0 0 8px;color:var(--ink)}
+  p{margin:0 0 12px;color:var(--ink-dim)}
+  p strong{color:var(--ink)}
+  code.q{background:var(--panel-2);padding:2px 6px;border-radius:4px;color:#c7d2fe;font-family:"SF Mono",ui-monospace,monospace;font-size:12px}
+  code.id{color:#fcd34d}
+
+  /* Graph box */
+  .graph-wrap{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:14px}
+  .graph-controls{display:flex;gap:8px;flex-wrap:wrap;padding:6px 6px 10px;border-bottom:1px solid var(--line);margin-bottom:10px}
+  .graph-controls button{background:var(--panel-2);border:1px solid var(--line);color:var(--ink-dim);padding:5px 11px;border-radius:999px;cursor:pointer;font-size:12px;font-family:inherit}
+  .graph-controls button:hover{color:var(--ink);border-color:#3a4150}
+  .graph-controls button.active{background:var(--accent);color:#06121f;border-color:var(--accent);font-weight:600}
+  .graph-controls .legend{margin-left:auto;display:flex;gap:14px;font-size:11px;color:var(--ink-faint);align-items:center;flex-wrap:wrap}
+  .legend .swatch{display:inline-block;width:22px;height:0;margin-right:4px;vertical-align:middle}
+  .legend .swatch.initial{border-top:2px solid var(--edge-initial)}
+  .legend .swatch.update{border-top:2px dashed var(--edge-update)}
+
+  /* Graph board: fixed pixel canvas */
+  .board{position:relative;width:100%;max-width:980px;height:560px;margin:0 auto;background:#0f1217;border-radius:8px;overflow:hidden}
+  .board .lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .board .lines line.edge{stroke:var(--edge-initial);stroke-width:2;fill:none}
+  .board .lines line.edge.update{stroke:var(--edge-update);stroke-dasharray:6 4;opacity:.85}
+  .board .lines line.conf-high{stroke-width:2.8}
+  .board .lines line.conf-medium{stroke-width:2}
+  .board .lines line.conf-low{stroke-width:1.4;opacity:.7}
+  .board .lines line.hit{stroke:transparent;stroke-width:18;pointer-events:stroke;cursor:help}
+
+  .node{
+    position:absolute;
+    width:72px;height:72px;border-radius:50%;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:#0b0d10;font-weight:700;font-size:13px;
+    transform:translate(-50%,-50%);
+    cursor:grab;user-select:none;
+    box-shadow:0 2px 10px rgba(0,0,0,.45);
+    border:2px solid #0b0d10;
+    transition:transform .05s;
+    z-index:2;
+  }
+  .node:hover{outline:3px solid #fff;outline-offset:-5px}
+  .node:active{cursor:grabbing}
+  .node .nm{font-size:13px;line-height:1.1}
+  .node .rl{font-size:9.5px;font-weight:600;opacity:.75;margin-top:2px;text-transform:uppercase;letter-spacing:.03em}
+  .node.dm{background:var(--dm);color:#2a0303}
+  .node.champion{background:var(--champion);color:#06290f}
+  .node.influencer{background:var(--influencer);color:#2d2103}
+  .node.blocker{background:var(--blocker);color:#2a0404}
+  .node.unknown{background:var(--unknown);color:#101418}
+
+  /* Floating evidence panel */
+  .evidence-panel{
+    position:fixed;max-width:380px;background:var(--panel);border:1px solid #3a4150;border-radius:10px;padding:14px 16px;
+    box-shadow:0 12px 40px rgba(0,0,0,.6);font-size:13px;color:var(--ink);display:none;z-index:50;pointer-events:none
+  }
+  .evidence-panel h4{margin:0 0 6px;font-size:14px}
+  .evidence-panel .edge-meta{color:var(--ink-faint);font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+  .evidence-panel .snippet{background:var(--panel-2);border-left:3px solid var(--edge-initial);padding:6px 10px;border-radius:4px;margin-bottom:6px;font-family:"SF Mono",ui-monospace,monospace;font-size:12px;color:var(--ink);line-height:1.5}
+  .evidence-panel .src{color:var(--ink-faint);font-size:11px;margin-top:2px}
+
+  /* Side explainer */
+  .side{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}
+  @media(max-width:860px){.side{grid-template-columns:1fr}}
+  .stage-box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .stage-box h3{margin-top:0}
+  .stage-box ol{margin:0;padding-left:18px;color:var(--ink-dim);font-size:13px}
+  .stage-box li{margin:4px 0}
+  .stage-box li b{color:var(--ink)}
+
+  /* Edge table */
+  table.edges{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+  table.edges th,table.edges td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.edges th{color:var(--ink-faint);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+  table.edges tr:hover td{background:var(--panel)}
+  .arrow{color:var(--accent);font-weight:700;padding:0 6px}
+  .arrow.bi{color:#a78bfa}
+
+  /* Prompt / pipeline */
+  pre.prompt{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow-x:auto;font-family:"SF Mono",ui-monospace,monospace;font-size:12px;color:#cbd5e1;line-height:1.6;white-space:pre}
+  pre.prompt .kw{color:#fcd34d}
+  pre.prompt .str{color:#86efac}
+  pre.prompt .ct{color:#8cc0ff;font-weight:600}
+  pre.prompt .cmt{color:var(--ink-faint);font-style:italic}
+
+  .pipeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:14px}
+  .step{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+  .step .n{display:inline-block;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#06121f;text-align:center;line-height:22px;font-size:12px;font-weight:700;margin-bottom:6px}
+  .step h4{margin:0 0 4px;font-size:13px}
+  .step p{margin:0;color:var(--ink-dim);font-size:12px}
+
+  /* Cards */
+  .pair-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;margin-top:14px}
+  .pair{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .pair .head{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-weight:600}
+  .pair .conf{font-size:11px;color:var(--ink-faint)}
+  .pair .ev{background:var(--panel-2);border-left:3px solid var(--edge-initial);padding:8px 10px;border-radius:4px;font-family:"SF Mono",ui-monospace,monospace;font-size:12px;margin-top:8px;color:var(--ink)}
+  .pair .src{color:var(--ink-faint);font-size:11px;margin-top:4px}
+  .pair.skip{border-style:dashed;opacity:.75}
+
+  footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);color:var(--ink-faint);font-size:12px}
+
+  @media (max-width:720px){h1{font-size:24px}.board{height:460px}}
+
+
+/* ----- Tab switcher ----- */
+.tabs {
+  position: sticky; top: 0; z-index: 40;
+  background: rgba(11,13,16,.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+  margin: -40px -24px 28px;
+  padding: 14px 24px;
+  display: flex; gap: 8px; align-items: center;
+}
+.tabs .brand { font-size: 13px; color: var(--ink-dim); font-weight: 600; margin-right: 18px; letter-spacing: .02em; }
+.tabs button {
+  background: var(--panel); border: 1px solid var(--line); color: var(--ink-dim);
+  padding: 8px 16px; border-radius: 8px; cursor: pointer; font: inherit; font-size: 13px; font-weight: 500;
+}
+.tabs button:hover { color: var(--ink); border-color: #3a4150; }
+.tabs button.active {
+  background: var(--accent); color: #06121f; border-color: var(--accent); font-weight: 600;
+}
+.view { display: none; }
+.view.active { display: block; }
 </style>
 </head>
 <body>
+<div class="wrap">
+
+<nav class="tabs">
+  <span class="brand">Buying Center · Weiland Bau</span>
+  <button data-view="roles" class="active">1 · Role Determination</button>
+  <button data-view="rels">2 · Relationship Determination</button>
+</nav>
+
+<div class="view active" id="view-roles">
 <div class="wrap">
 
 <header>
@@ -654,6 +829,280 @@ Munich workshop</div>
 </footer>
 
 </div>
+</div>
+<div class="view" id="view-rels">
+<div class="wrap">
+
+<header>
+  <div class="crumb">Companion to the <a href="JOURNEY_Bosch_Weiland_BuyingCenter.html">Role Determination Journey</a> · STC4CMSAPI-3009</div>
+  <h1>Buying Center Relationships — who influences whom</h1>
+  <div class="sub">Same cast. Same account. Same 13 artifacts. This time we're asking a different question: given everything we know about Weiland Bau, which contacts <strong>influence</strong> which — and how confidently can the AI tell? Hover any edge in the graph to see the evidence snippets the model used.</div>
+  <nav class="jump">
+    <a href="#graph-r">Interactive graph</a>
+    <a href="#edges-r">Expected edges</a>
+    <a href="#pairs-r">Evidence per pair</a>
+    <a href="#prompt-r">Prompt &amp; pipeline</a>
+    <a href="#testing-r">How to test</a>
+  </nav>
+</header>
+
+<section id="recap-r">
+  <h2>1. Where we are in the Buying Center feature</h2>
+  <div class="side">
+    <div>
+      <p><strong>Role determination</strong> (the previous story) told us <em>who</em> each contact is: Decision Maker, Champion, Influencer, Blocker. That gives the rep a cast of characters.</p>
+      <p><strong>Relationship determination</strong> (this story — STC4CMSAPI-3009) tells us <em>how those characters relate to each other.</em> Who defers to whom? Who introduces whom? Who does a Blocker escalate to when they don't trust the rep?</p>
+      <p>Phase 1 detects a single, forgiving relationship type: <code class="q">Influences</code> — directional. <code class="id">Contact A → Influences → Contact B</code> means A's stance, authority, or behavior shapes B's position in this deal. A Phase 2 story will split this into subtypes (Reports To, Advocates For, Opposes, Works With, Mentors).</p>
+    </div>
+    <div class="stage-box">
+      <h3>Graph maturity model</h3>
+      <ol>
+        <li><b>Stage 0.</b> Empty. CTA: Import Contacts.</li>
+        <li><b>Stage 1.</b> Contacts in, AI analyzing.</li>
+        <li><b>Stage 2.</b> Roles found, no edges yet — valid state.</li>
+        <li><b>Stage 3.</b> Initial BC creation: AI edges render <span style="color:var(--edge-initial)">solid</span>.</li>
+        <li><b>Stage 4.</b> Later re-inference updates render <span style="color:var(--edge-update)">dashed</span> until rep confirms.</li>
+        <li><b>Stage 5.</b> Fully mapped network.</li>
+      </ol>
+      <p style="margin-top:8px;font-size:12px">The graph below is in <b>Stage 3</b> — initial creation. All AI-derived edges render solid. Dashed is reserved for subsequent updates that haven't been confirmed yet.</p>
+    </div>
+  </div>
+</section>
+
+<section id="graph-r">
+  <h2>2. The relationship graph — Weiland Bau</h2>
+  <p>Hover any line to see the exact evidence snippets. Drag any node to rearrange — the edges follow.</p>
+  <div class="graph-wrap">
+    <div class="graph-controls">
+      <button class="active" data-filter="all">All edges</button>
+      <button data-filter="high">High confidence only</button>
+      <div class="legend">
+        <span><span class="swatch initial"></span>Initial BC creation</span>
+        <span><span class="swatch update"></span>Later update (not confirmed)</span>
+        <span>· edge thickness = confidence</span>
+      </div>
+    </div>
+    <div class="board" id="board">
+      <svg class="lines" id="lines"></svg>
+      <!-- node divs injected by JS -->
+    </div>
+  </div>
+  <div class="evidence-panel" id="ev"></div>
+</section>
+
+<section id="edges-r">
+  <h2>3. The 7 edges the AI should return</h2>
+  <p>For N=7 contacts there are 21 possible pairs. The spec gates inference on "at least one substantive shared record" — most pairs are filtered out before any model call. Below are the pairs that <em>pass the gate</em> and what we expect the AI to return.</p>
+  <table class="edges">
+    <thead>
+      <tr><th>#</th><th>Source</th><th></th><th>Target</th><th>Confidence</th><th>Why (abbreviated)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Sabine <span class="tag tag-champion">Champion</span></td><td class="arrow bi">⇄</td><td>Katrin <span class="tag tag-dm">DM</span></td><td>High</td><td>Sabine shares Lena's materials with Katrin, coaches rep before Katrin's meeting. Katrin names Sabine program owner. Bidirectional.</td></tr>
+      <tr><td>2</td><td>Katrin <span class="tag tag-dm">DM</span></td><td class="arrow">→</td><td>Markus <span class="tag tag-dm">DM-M</span></td><td>High</td><td>Markus explicitly defers to Katrin twice ("I need to come back to Dr. Weiland on this"). Katrin requires his commercial signoff — authority flows down from her.</td></tr>
+      <tr><td>3</td><td>Sabine <span class="tag tag-champion">Champion</span></td><td class="arrow">→</td><td>Ingrid <span class="tag tag-influencer">Influencer</span></td><td>Medium</td><td>Sabine introduces Ingrid to Lena and frames her as "a key voice in the evaluation" — introduction + framing pattern.</td></tr>
+      <tr><td>4</td><td>Sabine <span class="tag tag-champion">Champion</span></td><td class="arrow">→</td><td>Rolf <span class="tag tag-influencer">Influencer</span></td><td>Low</td><td>Only one signal: Sabine said she'd introduce Rolf to Lena. No follow-up shared context. AI should flag Low — borderline skip.</td></tr>
+      <tr><td>5</td><td>Thomas <span class="tag tag-blocker">Blocker</span></td><td class="arrow">→</td><td>Sabine <span class="tag tag-champion">Champion</span></td><td>Medium</td><td>Thomas escalates to Sabine over Lena's head (Email 4) — treats her as his channel to Katrin. Classic influence-upward.</td></tr>
+      <tr><td>6</td><td>Katrin <span class="tag tag-dm">DM</span></td><td class="arrow">→</td><td>Thomas <span class="tag tag-blocker">Blocker</span></td><td>Medium</td><td>Katrin override of Thomas's Munich-pilot resistance in Appt 3 — "Thomas's job is to run Region South… these are not the same job". Authority-over signal.</td></tr>
+      <tr><td>7</td><td>Thomas <span class="tag tag-blocker">Blocker</span></td><td class="arrow">→</td><td>Peter <span class="tag tag-unknown">Unknown</span></td><td>Low</td><td>Weak mention-only pattern — Peter works in Thomas's Munich workshop. AI may <b>correctly skip</b> this per graceful-degradation rule ("&lt; 1 substantive shared record"). Either outcome is acceptable.</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:14px;font-size:13px;color:var(--ink-dim)"><strong>Pairs the AI should NOT infer any edge for</strong> (14 of the 21 possible pairs): Markus↔Sabine, Markus↔Ingrid, Markus↔Rolf, Markus↔Thomas, Markus↔Peter, Ingrid↔Rolf, Ingrid↔Thomas, Ingrid↔Peter, Rolf↔Thomas, Rolf↔Peter, Rolf↔Katrin, Katrin↔Ingrid, Katrin↔Peter, Peter↔Sabine. For most of these the gate fails (zero shared records in the last 90 days). This is a feature, not a bug — the spec AC #9 says "absence of an edge is a valid and expected state."</p>
+</section>
+
+<section id="pairs-r">
+  <h2>4. Evidence snippets, per pair</h2>
+  <p>These are the exact sentences from the Weiland artifacts the AI should surface as evidence. If the model returns a different set, the dev team can trace it back to the source record.</p>
+  <div class="pair-cards">
+
+    <div class="pair">
+      <div class="head">Sabine <span class="arrow bi">⇄</span> Katrin <span class="conf">· Bidirectional · <b>High</b></span></div>
+      <div class="ev">"I shared it with Katrin yesterday and she asked me to set up a direct meeting with you… Between us: she's more convinced about the tracking service than about changing the tools themselves, so lean into TrackMyTools in the meeting."</div>
+      <div class="src">Email 2 · Sabine → Lena, cc Ingrid · 2026-09-23</div>
+      <div class="ev">"She wants Sabine named as program owner in the contract."</div>
+      <div class="src">Appointment 3 · Commercial deep-dive · 2026-11-05</div>
+    </div>
+
+    <div class="pair">
+      <div class="head">Katrin <span class="arrow">→</span> Markus <span class="conf">· High</span></div>
+      <div class="ev">"I will make the call on this, but I will not make it without Markus's commercial sign-off."</div>
+      <div class="src">Visit 1 · Stuttgart HQ · 2026-09-30</div>
+      <div class="ev">"He is not making the decision — he said twice 'I need to come back to Dr. Weiland on this' — but nothing goes through without him."</div>
+      <div class="src">Appointment 3 · 2026-11-05</div>
+    </div>
+
+    <div class="pair">
+      <div class="head">Sabine <span class="arrow">→</span> Ingrid <span class="conf">· Medium</span></div>
+      <div class="ev">"As discussed, I'm introducing you to Ingrid Novak, our Head of Occupational Safety… she'll be a key voice in the evaluation."</div>
+      <div class="src">Email 2 · Sabine → Lena, cc Ingrid · 2026-09-23</div>
+    </div>
+
+    <div class="pair">
+      <div class="head">Sabine <span class="arrow">→</span> Rolf <span class="conf">· Low</span></div>
+      <div class="ev">"Sabine will introduce me to Rolf Dietrich."</div>
+      <div class="src">Appointment 1 · Discovery call · 2026-09-15</div>
+      <div class="src" style="margin-top:6px">⚠ Only 1 signal, no follow-up shared records. AI may return Low or skip entirely under the graceful-degradation rule.</div>
+    </div>
+
+    <div class="pair">
+      <div class="head">Thomas <span class="arrow">→</span> Sabine <span class="conf">· Medium</span></div>
+      <div class="ev">"Writing to you directly because I think we're moving too fast on this. […] I'm copying you so this isn't behind your back."</div>
+      <div class="src">Email 4 · Thomas → Sabine, cc Lena · 2026-10-28</div>
+      <div class="src" style="margin-top:6px">Thomas addresses Sabine as the internal decision channel — he escalates to her rather than discussing with the rep. Influence-upward by a Blocker.</div>
+    </div>
+
+    <div class="pair">
+      <div class="head">Katrin <span class="arrow">→</span> Thomas <span class="conf">· Medium</span></div>
+      <div class="ev">"Thomas's job is to run Region South profitably. My job is to decide what Weiland Bau's tool strategy looks like for the next decade. These are not the same job and I will not confuse them."</div>
+      <div class="src">Appointment 3 · 2026-11-05</div>
+      <div class="src" style="margin-top:6px">Authority-over signal. Katrin re-scopes Thomas's objection without consulting him — hierarchical influence.</div>
+    </div>
+
+    <div class="pair skip">
+      <div class="head">Thomas <span class="arrow">→</span> Peter <span class="conf">· Low — may skip</span></div>
+      <div class="ev">(No shared email thread, no shared meetings, no cross-mentions in rep notes.)</div>
+      <div class="src">Only indirect signal: both work in Munich workshop. Pattern-2 (name-mention) match fails because Peter is never named in Thomas's correspondence within the data window. Per the context-selection design, this pair should be <b>skipped</b> before any AI call — "do not call the AI on pairs with zero substantive shared records."</div>
+    </div>
+
+  </div>
+</section>
+
+<section id="prompt-r">
+  <h2>5. What the AI actually sees — one pair at a time</h2>
+  <p>The prompt is run <strong>per contact pair</strong>, not globally. Below is the assembled context for the Katrin → Markus pair, built from the Weiland artifacts using the pipeline described in <code class="q">BuyingCenter_RelationshipContext_Design.md</code>.</p>
+
+<pre class="prompt"><span class="kw">Analyze whether a directional influence relationship exists between two contacts
+in an enterprise sales deal, based on interaction data.</span>
+
+<span class="ct">RELATIONSHIP TO DETECT:</span>
+"Influences" — Contact A's opinion, stance, authority, or behavior materially shapes
+Contact B's decisions or positions in this deal.
+
+<span class="ct">CONTACT A:</span>
+- Name: Katrin Weiland
+- Title: COO
+- Department: Executive
+- Inferred Role: <span class="str">Decision Maker</span>
+
+<span class="ct">CONTACT B:</span>
+- Name: Markus Berger
+- Title: Head of Procurement
+- Department: Procurement
+- Inferred Role: <span class="str">Decision Maker</span> <span class="cmt">(borderline — Medium confidence)</span>
+
+<span class="ct">SHARED INTERACTION EVIDENCE</span> (last 90 days):
+
+<span class="cmt">[VISIT NOTE — 2026-09-30, Stuttgart HQ]</span>
+Attendees: Katrin Weiland, Sabine Hoffmann, Lena Müller
+Rep notes excerpt: "She mentioned the board decision is scheduled for mid-December
+and that she needs the full business case landed with the CFO by end of November.
+Said <span class="str">'I will make the call on this, but I will not make it without Markus's
+commercial sign-off.'</span>"
+
+<span class="cmt">[APPOINTMENT NOTE — 2026-11-05, Commercial deep-dive]</span>
+Attendees: Katrin Weiland, Markus Berger, Lena Müller
+Rep notes excerpt: "Markus drove the first 90 min. He went through every clause
+with a highlighter… <span class="str">He is not making the decision — he said twice 'I need to come
+back to Dr. Weiland on this' — but nothing goes through without him.</span>"
+
+<span class="cmt">[EMAIL — 2026-11-04, Markus → Lena]</span>
+Participants: Markus Berger, Lena Müller
+Body excerpt: "<span class="str">Dr. Weiland has asked me to validate all commercial clauses before
+she approves.</span>"
+
+<span class="ct">OUTPUT (JSON only):</span>
+{
+  "relationship_detected": true,
+  "direction": <span class="str">"A_influences_B"</span>,
+  "confidence": <span class="str">"High"</span>,
+  "evidence": [
+    "Markus twice said 'I need to come back to Dr. Weiland on this'",
+    "Katrin requires his commercial sign-off, defining the scope of his authority"
+  ],
+  "relationship_type": "Influences"
+}
+</pre>
+
+  <h3 style="margin-top:28px">The pipeline — 10 steps from raw records to rendered edge</h3>
+  <div class="pipeline">
+    <div class="step"><div class="n">1</div><h4>Pull records</h4><p>All emails, appointments, visits for the account, last 90 days.</p></div>
+    <div class="step"><div class="n">2</div><h4>Participant map</h4><p>Tag each record with which BC contacts appear in it.</p></div>
+    <div class="step"><div class="n">3</div><h4>Pair priority</h4><p>Decision Maker and Champion pairs first; cap 50/run.</p></div>
+    <div class="step"><div class="n">4</div><h4>Collect shared</h4><p>Pattern 1 (both participants) + Pattern 2 (name-mention).</p></div>
+    <div class="step"><div class="n">5</div><h4>Gate</h4><p>&lt; 1 substantive record → skip, no AI call.</p></div>
+    <div class="step"><div class="n">6</div><h4>Rank &amp; truncate</h4><p>Top 5 emails + 3 notes, sentence-level excerpts.</p></div>
+    <div class="step"><div class="n">7</div><h4>Assemble</h4><p>Metadata + roles + excerpts → one prompt per pair.</p></div>
+    <div class="step"><div class="n">8</div><h4>Call model</h4><p>Returns direction, confidence, evidence.</p></div>
+    <div class="step"><div class="n">9</div><h4>Store</h4><p>Edge with provenance: date, evidence IDs.</p></div>
+    <div class="step"><div class="n">10</div><h4>Render</h4><p>Solid on initial creation. Later updates render dashed until the rep confirms.</p></div>
+  </div>
+</section>
+
+<section id="testing-r">
+  <h2>6. How to test using this scenario</h2>
+  <ol style="color:var(--ink-dim);font-size:14px">
+    <li><strong>Prerequisite.</strong> Role determination has already been run against the Weiland seed (see the role-determination journey for the artifact list). Roles must be present for the relationship prompt's <code class="q">buying_role</code> input to be populated — otherwise pass <code class="q">"Unknown"</code>.</li>
+    <li><strong>Run relationship determination</strong> for the Weiland Buying Center. Expected: 6–7 edges in the graph (see section 3 table).</li>
+    <li><strong>Must-pass cases:</strong>
+      <ul>
+        <li>Sabine ⇄ Katrin: bidirectional edge inferred with High confidence (OR two separate directed edges, per the open question in the user story).</li>
+        <li>Katrin → Markus: High confidence, direction A→B.</li>
+        <li>Thomas → Sabine: at least Medium confidence — the escalation pattern in Email 4 must be detected.</li>
+      </ul>
+    </li>
+    <li><strong>Should-pass cases:</strong>
+      <ul>
+        <li>Katrin → Thomas: Medium confidence, based on Appt 3. If the model misses this, it's under-weighting the "authority-over" pattern.</li>
+        <li>Sabine → Rolf: Low confidence OR skipped. Both acceptable.</li>
+      </ul>
+    </li>
+    <li><strong>Must-skip cases:</strong>
+      <ul>
+        <li>Peter ↔ anyone: should be skipped before AI call (gate failure). If the AI returns any edge involving Peter, the pre-filter is broken.</li>
+        <li>Katrin ↔ Ingrid, Katrin ↔ Rolf, Katrin ↔ Peter: no shared records in the 90-day window — skip.</li>
+      </ul>
+    </li>
+    <li><strong>Edge-case drills:</strong>
+      <ul>
+        <li>Remove Email 2 (the "I shared it with Katrin" email). Re-run. Expected: Sabine→Katrin confidence drops from High to Medium. If it stays High, the model isn't actually using that email as its evidence.</li>
+        <li>Remove Email 4 (Thomas's escalation). Re-run. Expected: Thomas→Sabine disappears or drops to Low — this is the single evidence source for that edge.</li>
+        <li>Add a new email where Katrin cc's Ingrid about the board decision. Re-run. Expected: Katrin → Ingrid appears — on re-inference this new edge should render dashed until the rep confirms.</li>
+      </ul>
+    </li>
+  </ol>
+</section>
+
+<footer>
+  Journey authored 2026-11-13 · Companion to <b>BuyingCenter_RelationshipDetermination_UserStory.md</b> (STC4CMSAPI-3009) · Reuses the Weiland Bau cast from the <a href="JOURNEY_Bosch_Weiland_BuyingCenter.html">role-determination journey</a> · Owner: Yogesh Vijay
+</footer>
+
+</div>
+</div>
+
+</div>
+
+<script>
+// ----- Tab switcher -----
+document.querySelector(".tabs").addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-view]"); if (!btn) return;
+  const target = btn.dataset.view;
+  document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("active", b === btn));
+  document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.id === "view-" + target));
+  // When switching to the graph view, redraw edges in case the board was hidden during initial layout
+  if (target === "rels" && typeof redraw === "function") {
+    requestAnimationFrame(() => redraw());
+  }
+  // Update URL hash for shareability
+  history.replaceState(null, "", "#" + target);
+  window.scrollTo({top: 0, behavior: "instant"});
+});
+
+// Open to hash if provided
+const initial = (location.hash || "").replace("#","");
+if (initial === "rels") {
+  document.querySelector('.tabs button[data-view="rels"]').click();
+}
+</script>
 
 <script>
   // Filter chips
@@ -685,5 +1134,232 @@ Munich workshop</div>
     });
   });
 </script>
+<script>
+// ----- Data -----
+const ROLE_LABEL = {dm:"Decision Maker", champion:"Champion", influencer:"Influencer", blocker:"Blocker", unknown:"Unknown"};
+
+// Positions as percentages of the board (0-100) so it scales with width
+const nodes = [
+  {id:"katrin", name:"Katrin", role:"dm",         xp:50, yp:20},
+  {id:"markus", name:"Markus", role:"dm",         xp:78, yp:36},
+  {id:"sabine", name:"Sabine", role:"champion",   xp:32, yp:48},
+  {id:"thomas", name:"Thomas", role:"blocker",    xp:63, yp:70},
+  {id:"ingrid", name:"Ingrid", role:"influencer", xp:14, yp:32},
+  {id:"rolf",   name:"Rolf",   role:"influencer", xp:18, yp:78},
+  {id:"peter",  name:"Peter",  role:"unknown",    xp:84, yp:82}
+];
+
+const edges = [
+  {from:"sabine", to:"katrin", state:"initial", conf:"high", dir:"bi",
+    tip:{title:"Sabine ⇄ Katrin · Bidirectional · High",
+         meta:"INITIAL · BIDIRECTIONAL",
+         snippets:[
+           {q:"I shared it with Katrin yesterday and she asked me to set up a direct meeting with you… Between us: she's more convinced about the tracking service, so lean into TrackMyTools.", src:"Email 2 · 2026-09-23"},
+           {q:"She wants Sabine named as program owner in the contract.", src:"Appointment 3 · 2026-11-05"}]}},
+  {from:"katrin", to:"markus", state:"initial", conf:"high", dir:"fwd",
+    tip:{title:"Katrin → Markus · High",
+         meta:"INITIAL · HIGH CONFIDENCE",
+         snippets:[
+           {q:"I will make the call on this, but I will not make it without Markus's commercial sign-off.", src:"Visit 1 · 2026-09-30"},
+           {q:"He is not making the decision — 'I need to come back to Dr. Weiland on this' — but nothing goes through without him.", src:"Appointment 3 · 2026-11-05"},
+           {q:"Dr. Weiland has asked me to validate all commercial clauses before she approves.", src:"Email 5 · 2026-11-04"}]}},
+  {from:"sabine", to:"ingrid", state:"initial", conf:"medium", dir:"fwd",
+    tip:{title:"Sabine → Ingrid · Medium",
+         meta:"INITIAL · MEDIUM CONFIDENCE",
+         snippets:[
+           {q:"As discussed, I'm introducing you to Ingrid Novak… she'll be a key voice in the evaluation.", src:"Email 2 · 2026-09-23"}]}},
+  {from:"sabine", to:"rolf", state:"initial", conf:"low", dir:"fwd",
+    tip:{title:"Sabine → Rolf · Low (may skip)",
+         meta:"INITIAL · LOW — SINGLE SIGNAL",
+         snippets:[
+           {q:"Sabine will introduce me to Rolf Dietrich.", src:"Appointment 1 · 2026-09-15"}]}},
+  {from:"thomas", to:"sabine", state:"initial", conf:"medium", dir:"fwd",
+    tip:{title:"Thomas → Sabine · Medium",
+         meta:"INITIAL · ESCALATION PATTERN",
+         snippets:[
+           {q:"Writing to you directly because I think we're moving too fast on this. […] I'm copying you so this isn't behind your back.", src:"Email 4 · 2026-10-28"}]}},
+  {from:"katrin", to:"thomas", state:"initial", conf:"medium", dir:"fwd",
+    tip:{title:"Katrin → Thomas · Medium",
+         meta:"INITIAL · AUTHORITY-OVER",
+         snippets:[
+           {q:"Thomas's job is to run Region South profitably. My job is to decide what Weiland Bau's tool strategy looks like for the next decade.", src:"Appointment 3 · 2026-11-05"}]}},
+  {from:"thomas", to:"peter", state:"initial", conf:"low", dir:"fwd",
+    tip:{title:"Thomas → Peter · Low (likely skipped)",
+         meta:"INITIAL · LOW — BORDERLINE SKIP",
+         snippets:[
+           {q:"No shared email thread, no shared meetings. Organizational proximity only.", src:"Pattern-2 match fails · gate should skip"}]}}
+];
+
+// ----- Setup -----
+const board = document.getElementById("board");
+const linesSvg = document.getElementById("lines");
+const ev = document.getElementById("ev");
+const byId = Object.fromEntries(nodes.map(n=>[n.id,n]));
+
+// Create the arrow marker + hit lines using SVG namespace carefully
+const SVG_NS = "http://www.w3.org/2000/svg";
+linesSvg.setAttribute("xmlns", SVG_NS);
+linesSvg.setAttribute("preserveAspectRatio","none");
+
+// We'll update viewBox on resize to match board pixel size
+function sizeSvg(){
+  const r = board.getBoundingClientRect();
+  linesSvg.setAttribute("viewBox", `0 0 ${r.width} ${r.height}`);
+  linesSvg.setAttribute("width", r.width);
+  linesSvg.setAttribute("height", r.height);
+}
+
+function makeMarker(id, color){
+  const m = document.createElementNS(SVG_NS,"marker");
+  m.setAttribute("id",id);
+  m.setAttribute("viewBox","0 0 10 10");
+  m.setAttribute("refX","10");
+  m.setAttribute("refY","5");
+  m.setAttribute("markerWidth","7");
+  m.setAttribute("markerHeight","7");
+  m.setAttribute("orient","auto-start-reverse");
+  m.setAttribute("markerUnits","strokeWidth");
+  const p = document.createElementNS(SVG_NS,"path");
+  p.setAttribute("d","M0,0 L10,5 L0,10 z");
+  p.setAttribute("fill",color);
+  m.appendChild(p);
+  return m;
+}
+const defs = document.createElementNS(SVG_NS,"defs");
+defs.appendChild(makeMarker("arr-initial","#4ade80"));
+defs.appendChild(makeMarker("arr-update","#8cc0ff"));
+linesSvg.appendChild(defs);
+
+// ----- Render nodes (as divs) -----
+function renderNodes(){
+  // remove old
+  Array.from(board.querySelectorAll(".node")).forEach(el=>el.remove());
+  nodes.forEach(n=>{
+    const d = document.createElement("div");
+    d.className = "node " + n.role;
+    d.dataset.id = n.id;
+    d.style.left = n.xp + "%";
+    d.style.top  = n.yp + "%";
+    d.innerHTML = `<div class="nm">${n.name}</div><div class="rl">${ROLE_LABEL[n.role]}</div>`;
+    board.appendChild(d);
+  });
+}
+
+// ----- Render edges (as SVG lines) -----
+function renderEdges(){
+  // Remove existing lines (keep defs)
+  Array.from(linesSvg.querySelectorAll("line")).forEach(el=>el.remove());
+
+  const r = board.getBoundingClientRect();
+  const W = r.width, H = r.height;
+  const NODE_R = 36; // node radius in px
+
+  edges.forEach((e,i)=>{
+    const a = byId[e.from], b = byId[e.to];
+    const ax = a.xp/100 * W, ay = a.yp/100 * H;
+    const bx = b.xp/100 * W, by = b.yp/100 * H;
+    const dx = bx-ax, dy = by-ay;
+    const len = Math.max(1, Math.sqrt(dx*dx+dy*dy));
+    const ux = dx/len, uy = dy/len;
+    const x1 = ax + ux*NODE_R, y1 = ay + uy*NODE_R;
+    const x2 = bx - ux*NODE_R, y2 = by - uy*NODE_R;
+
+    const line = document.createElementNS(SVG_NS,"line");
+    line.setAttribute("x1",x1); line.setAttribute("y1",y1);
+    line.setAttribute("x2",x2); line.setAttribute("y2",y2);
+    line.setAttribute("class", `edge ${e.state==="update"?"update":""} conf-${e.conf}`);
+    const markerId = e.state==="update" ? "arr-update" : "arr-initial";
+    line.setAttribute("marker-end", `url(#${markerId})`);
+    if(e.dir==="bi") line.setAttribute("marker-start", `url(#${markerId})`);
+    line.dataset.idx = i;
+    linesSvg.appendChild(line);
+
+    // Transparent hit-test line
+    const hit = document.createElementNS(SVG_NS,"line");
+    hit.setAttribute("x1",x1); hit.setAttribute("y1",y1);
+    hit.setAttribute("x2",x2); hit.setAttribute("y2",y2);
+    hit.setAttribute("class","edge hit");
+    hit.dataset.idx = i;
+    linesSvg.appendChild(hit);
+  });
+}
+
+function redraw(){ sizeSvg(); renderEdges(); }
+
+// ----- Evidence tooltip -----
+function showEv(idx, mx, my){
+  const e = edges[idx]; const t = e.tip;
+  ev.innerHTML = `<div class="edge-meta">${t.meta}</div><h4>${t.title}</h4>` +
+    t.snippets.map(s=>`<div class="snippet">"${s.q}"</div><div class="src">${s.src}</div>`).join("");
+  ev.style.display = "block";
+  const pad = 14;
+  const w = ev.offsetWidth, h = ev.offsetHeight;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let x = mx + pad, y = my + pad;
+  if(x + w + pad > vw) x = mx - w - pad;
+  if(y + h + pad > vh) y = my - h - pad;
+  ev.style.left = Math.max(6,x) + "px";
+  ev.style.top  = Math.max(6,y) + "px";
+}
+function hideEv(){ ev.style.display = "none"; }
+
+linesSvg.addEventListener("mousemove",(e)=>{
+  const t = e.target.closest("line");
+  if(!t || t.dataset.idx === undefined){ hideEv(); return; }
+  linesSvg.style.pointerEvents = "auto";
+  showEv(+t.dataset.idx, e.clientX, e.clientY);
+});
+linesSvg.addEventListener("mouseleave", hideEv);
+// Let hit-test lines receive events but keep normal lines behind nodes passthrough
+linesSvg.style.pointerEvents = "auto";
+
+// ----- Filter buttons -----
+document.querySelector(".graph-controls").addEventListener("click",(e)=>{
+  const btn = e.target.closest("button"); if(!btn) return;
+  document.querySelectorAll(".graph-controls button").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  const f = btn.dataset.filter;
+  Array.from(linesSvg.querySelectorAll("line")).forEach(line=>{
+    const i = +line.dataset.idx; if(isNaN(i)) return;
+    const ed = edges[i];
+    const visible = (f === "all") || (f === "high" && ed.conf === "high");
+    line.style.opacity = visible ? "" : "0.08";
+  });
+});
+
+// ----- Drag nodes -----
+let dragging = null, dragOff = {x:0,y:0};
+board.addEventListener("mousedown",(e)=>{
+  const n = e.target.closest(".node"); if(!n) return;
+  dragging = n.dataset.id;
+  const r = board.getBoundingClientRect();
+  const node = byId[dragging];
+  const nx = node.xp/100 * r.width;
+  const ny = node.yp/100 * r.height;
+  dragOff.x = (e.clientX - r.left) - nx;
+  dragOff.y = (e.clientY - r.top)  - ny;
+  e.preventDefault();
+});
+window.addEventListener("mousemove",(e)=>{
+  if(!dragging) return;
+  const r = board.getBoundingClientRect();
+  const nx = Math.max(40, Math.min(r.width-40, (e.clientX - r.left) - dragOff.x));
+  const ny = Math.max(40, Math.min(r.height-40, (e.clientY - r.top)  - dragOff.y));
+  const node = byId[dragging];
+  node.xp = (nx / r.width) * 100;
+  node.yp = (ny / r.height) * 100;
+  const el = board.querySelector(`.node[data-id="${dragging}"]`);
+  el.style.left = node.xp + "%";
+  el.style.top  = node.yp + "%";
+  renderEdges();
+});
+window.addEventListener("mouseup",()=>{ dragging = null; });
+
+// ----- Boot -----
+renderNodes();
+redraw();
+window.addEventListener("resize", redraw);
+</script>
+
 </body>
 </html>
