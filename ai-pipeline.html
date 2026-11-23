@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Pipeline — Buying Center · SAP Sales Cloud V2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+:root{
+  --bg:#0b0d10;
+  --panel:#13161b;
+  --panel-2:#1a1f26;
+  --panel-3:#20262f;
+  --line:#232933;
+  --line-strong:#3a4150;
+  --ink:#e7ebf0;
+  --ink-dim:#9aa3af;
+  --ink-faint:#6b7380;
+  --accent:#4ea3ff;
+  --accent-dim:#2a6aa8;
+  --dm:#ff6b6b;
+  --champion:#4ade80;
+  --influencer:#fbbf24;
+  --blocker:#f87171;
+  --unknown:#94a3b8;
+  --future:#a78bfa;
+  --email:#4ea3ff;
+  --appt:#fbbf24;
+  --visit:#4ade80;
+  --opp:#a78bfa;
+  --signal-bg:#fff3b0;
+  --signal-ink:#4a3a00;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif;line-height:1.55}
+.wrap{max-width:1280px;margin:0 auto;padding:36px 24px 100px}
+
+header{padding:24px 0 20px;border-bottom:1px solid var(--line);margin-bottom:28px}
+h1{font-size:30px;margin:0 0 8px;letter-spacing:-.015em}
+.sub{color:var(--ink-dim);font-size:15px;max-width:860px}
+.hdr-row{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.hdr-meta{display:flex;flex-direction:column;gap:6px;text-align:right;font-size:12px;color:var(--ink-faint)}
+.hdr-meta b{color:var(--ink-dim);font-weight:500}
+.hdr-meta .pill{display:inline-block;padding:3px 10px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);color:var(--ink-dim);margin-top:4px}
+
+section{margin:40px 0}
+h2{font-size:21px;margin:0 0 6px;letter-spacing:-.01em}
+h2 .step{display:inline-block;width:26px;height:26px;border-radius:50%;background:var(--panel-2);border:1px solid var(--line);color:var(--accent);font-size:13px;line-height:24px;text-align:center;margin-right:10px;font-weight:600}
+.lede{color:var(--ink-dim);font-size:14px;margin:0 0 20px;max-width:820px}
+
+/* ---- Phase toggle ---- */
+.phase-ctl{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:28px}
+.phase-ctl .label{font-size:12px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.phase-ctl .toggle{display:flex;gap:4px;background:var(--panel-2);padding:4px;border-radius:9px;border:1px solid var(--line)}
+.phase-ctl .toggle button{background:transparent;border:0;color:var(--ink-dim);padding:7px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-family:inherit;font-weight:500;transition:all .15s}
+.phase-ctl .toggle button:hover{color:var(--ink)}
+.phase-ctl .toggle button.active{background:var(--accent);color:#06121f;font-weight:600}
+.phase-ctl .toggle button.active.future{background:var(--future);color:#1a0d3a}
+.phase-ctl .ctl-note{color:var(--ink-dim);font-size:12.5px;margin-left:auto}
+.phase-ctl .ctl-note b{color:var(--ink)}
+
+/* ---- Block diagram ---- */
+.diagram{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:28px 24px 22px;
+  position:relative;
+  overflow:hidden;
+}
+.diagram-inner{
+  display:grid;
+  grid-template-columns: 1fr 1.1fr 1fr;
+  gap:28px;
+  align-items:stretch;
+  position:relative;
+  z-index:2;
+}
+.col{display:flex;flex-direction:column;gap:12px}
+.col-head{font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:4px;padding-left:2px}
+
+/* Source blocks */
+.src{
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:12px 14px;
+  cursor:pointer;
+  transition:all .15s;
+  position:relative;
+  user-select:none;
+}
+.src:hover{border-color:var(--line-strong);transform:translateX(-2px)}
+.src.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent), 0 8px 24px -8px rgba(78,163,255,.3)}
+.src.future{border-style:dashed}
+.src.future::after{
+  content:"Phase 2";
+  position:absolute;top:8px;right:10px;
+  font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--future);font-weight:700;
+}
+.src .src-head{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.src .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.src.email .dot{background:var(--email)}
+.src.appt .dot{background:var(--appt)}
+.src.visit .dot{background:var(--visit)}
+.src.opp .dot{background:var(--opp)}
+.src.phone .dot{background:#f472b6}
+.src.linkedin .dot{background:#38bdf8}
+.src .name{font-size:14px;font-weight:600;color:var(--ink)}
+.src .meta{font-size:11px;color:var(--ink-faint);margin-top:2px}
+.src .count{display:inline-block;margin-left:auto;background:var(--bg);border:1px solid var(--line);color:var(--ink-dim);font-size:10.5px;padding:2px 7px;border-radius:999px;font-weight:600}
+
+/* Pipeline (middle) */
+.pipeline{display:flex;flex-direction:column;gap:12px;align-items:stretch}
+.stage{
+  background:linear-gradient(180deg,var(--panel-2) 0,var(--panel-3) 100%);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:14px 16px;
+  position:relative;
+  transition:all .15s;
+}
+.stage.lit{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.stage .stage-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.stage .stage-ico{
+  width:28px;height:28px;border-radius:7px;flex-shrink:0;
+  background:var(--bg);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+}
+.stage .stage-title{font-size:14px;font-weight:600;color:var(--ink)}
+.stage .stage-desc{font-size:12px;color:var(--ink-dim);line-height:1.5}
+.stage code{background:var(--bg);color:#c7d2fe;padding:1px 6px;border-radius:4px;font-size:11.5px;font-family:"SF Mono",ui-monospace,monospace}
+
+/* Output blocks */
+.out{
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:14px 16px;
+  position:relative;
+  transition:all .15s;
+}
+.out.lit{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.out .out-head{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.out .out-ico{font-size:14px}
+.out-list{display:flex;flex-direction:column;gap:6px}
+.out-item{
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg);border:1px solid var(--line);
+  border-radius:7px;padding:7px 10px;font-size:12.5px;
+}
+.out-item .role-tag{
+  display:inline-block;padding:2px 7px;border-radius:999px;font-size:10px;
+  font-weight:700;text-transform:uppercase;letter-spacing:.04em;flex-shrink:0;
+}
+.role-tag.dm{background:rgba(255,107,107,.15);color:#ffb3b3;border:1px solid rgba(255,107,107,.35)}
+.role-tag.champion{background:rgba(74,222,128,.13);color:#9af7b7;border:1px solid rgba(74,222,128,.35)}
+.role-tag.influencer{background:rgba(251,191,36,.13);color:#ffd977;border:1px solid rgba(251,191,36,.35)}
+.role-tag.blocker{background:rgba(248,113,113,.13);color:#ffb0b0;border:1px solid rgba(248,113,113,.35)}
+.out-item .nm{color:var(--ink);font-weight:500}
+.out-item .conf{margin-left:auto;font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em}
+.out-item.highlight{background:var(--panel-3);border-color:var(--accent)}
+
+/* Edges (graph output) */
+.graph-out{display:flex;flex-direction:column;gap:5px;margin-top:6px}
+.edge-row{
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg);border:1px solid var(--line);
+  border-radius:7px;padding:7px 10px;font-size:12px;
+}
+.edge-row .arrow{color:var(--accent);font-size:13px;font-weight:600}
+.edge-row .from,.edge-row .to{color:var(--ink);font-weight:500}
+.edge-row .lbl{margin-left:auto;font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.04em}
+.edge-row.dashed{border-style:dashed}
+.edge-row.highlight{background:var(--panel-3);border-color:var(--accent)}
+
+/* SVG connector overlay */
+svg.lines{
+  position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;
+}
+svg.lines path{
+  fill:none;stroke:var(--line);stroke-width:1.5;
+  transition:all .25s;
+}
+svg.lines path.lit{
+  stroke:var(--accent);stroke-width:2.2;
+  filter:drop-shadow(0 0 6px rgba(78,163,255,.6));
+}
+
+/* Legend */
+.legend{display:flex;flex-wrap:wrap;gap:18px;margin-top:20px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--ink-dim)}
+.legend .li{display:flex;align-items:center;gap:7px}
+.legend .sw{width:14px;height:14px;border-radius:4px;border:1px solid var(--line)}
+
+/* ---- Interactive example ---- */
+.example{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:24px;
+  margin-top:28px;
+}
+.example-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.example-head h3{margin:0;font-size:17px}
+.example-head .scenario-pill{
+  display:inline-block;padding:3px 10px;border-radius:999px;
+  background:var(--panel-2);border:1px solid var(--line);
+  color:var(--ink-dim);font-size:11px;letter-spacing:.04em;text-transform:uppercase;font-weight:600;
+}
+.example-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}
+.example-col{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.example-col h4{margin:0 0 10px;font-size:12px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.example-col .snippet{
+  font-family:"SF Mono",ui-monospace,monospace;font-size:12px;line-height:1.65;
+  background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;
+  color:var(--ink);white-space:pre-wrap;
+}
+.signal{background:var(--signal-bg);color:var(--signal-ink);padding:1px 4px;border-radius:3px;font-weight:600}
+.example-col ul.signals{list-style:none;padding:0;margin:0}
+.example-col ul.signals li{
+  padding:8px 10px;border-radius:7px;background:var(--bg);border:1px solid var(--line);
+  margin-bottom:6px;font-size:12.5px;color:var(--ink);
+}
+.example-col ul.signals li b{color:var(--signal-ink);background:var(--signal-bg);padding:1px 4px;border-radius:3px;font-weight:600}
+.example-col .result-card{
+  background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:8px;
+}
+.example-col .result-card .r-line{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.example-col .result-card .r-name{font-weight:600;color:var(--ink);font-size:13px}
+.example-col .result-card .r-ev{font-size:11.5px;color:var(--ink-dim);line-height:1.5}
+
+/* ---- How it fits ---- */
+.fits{display:grid;grid-template-columns:1.1fr 1fr;gap:20px;align-items:start}
+.fits-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 22px}
+.fits-card h3{margin:0 0 10px;font-size:15px}
+.fits-card ul{margin:0;padding-left:18px;color:var(--ink-dim);font-size:13.5px;line-height:1.7}
+.fits-card ul li b{color:var(--ink)}
+.fits-card.highlight{border-color:var(--future);background:linear-gradient(180deg,rgba(167,139,250,.08) 0%, var(--panel) 60%)}
+.fits-card.highlight h3{color:#d4c5ff}
+
+/* ---- Footer / nav ---- */
+.footer-nav{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.footer-nav a{color:var(--ink-dim);text-decoration:none;font-size:13px;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel);transition:all .15s}
+.footer-nav a:hover{color:var(--ink);border-color:var(--line-strong)}
+.footer-nav .note{color:var(--ink-faint);font-size:12px}
+
+@media (max-width:900px){
+  .diagram-inner{grid-template-columns:1fr;gap:16px}
+  .example-grid{grid-template-columns:1fr}
+  .fits{grid-template-columns:1fr}
+  svg.lines{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="hdr-row">
+    <div>
+      <h1>AI Pipeline — How the Buying Center Learns Itself</h1>
+      <p class="sub">Interactions you already capture in SAP Sales Cloud V2 — emails, appointment notes, visit notes — become signals that a GenAI classifier turns into inferred <b>buying-center roles</b> and <b>influence relationships</b> on your Account. Click any input block to see the end-to-end flow.</p>
+    </div>
+    <div class="hdr-meta">
+      <b>SAP Sales Cloud V2</b>
+      <span>Feature: Buying Center</span>
+      <span class="pill">Prepared for SAP IT walkthrough · Nov 2026</span>
+    </div>
+  </div>
+</header>
+
+<!-- ============================================================ -->
+<!-- Phase toggle -->
+<!-- ============================================================ -->
+<div class="phase-ctl">
+  <span class="label">Scope</span>
+  <div class="toggle" role="tablist">
+    <button id="btnMvp" class="active" onclick="setPhase('mvp')">Today — MVP</button>
+    <button id="btnPhase2" class="future" onclick="setPhase('phase2')">Phase 2 — With Opportunity</button>
+  </div>
+  <div class="ctl-note" id="phaseNote"><b>MVP:</b> role + influence inferred from Email, Appointment Notes, Visit Notes — the activity data already in Sales Cloud V2 today.</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- Block diagram -->
+<!-- ============================================================ -->
+<section>
+  <h2><span class="step">1</span>End-to-end pipeline</h2>
+  <p class="lede">Hover or click any input. The signal path lights up through to the roles and relationships it produces. Every suggestion is backed by a confidence level and 2–3 evidence snippets — the rep stays in control and can accept, edit, or reject.</p>
+
+  <div class="diagram" id="diagram">
+
+    <!-- Connector lines (SVG) are drawn dynamically by JS so they adapt to the layout -->
+    <svg class="lines" id="lines" preserveAspectRatio="none"></svg>
+
+    <div class="diagram-inner">
+
+      <!-- Column 1: Inputs -->
+      <div class="col" id="col-src">
+        <div class="col-head">Interaction data (last 90 days)</div>
+
+        <div class="src email" data-src="email" onclick="activateSrc('email')">
+          <div class="src-head"><span class="dot"></span><span class="name">Email</span><span class="count">plainContent</span></div>
+          <div class="meta">Thread subject + body. Signals: language cues, deference, cross-contact mentions.</div>
+        </div>
+
+        <div class="src appt" data-src="appt" onclick="activateSrc('appt')">
+          <div class="src-head"><span class="dot"></span><span class="name">Appointment Notes</span><span class="count">notes[]</span></div>
+          <div class="meta">Rep-authored observations: who attended, who pushed back, who deferred.</div>
+        </div>
+
+        <div class="src visit" data-src="visit" onclick="activateSrc('visit')">
+          <div class="src-head"><span class="dot"></span><span class="name">Visit Notes</span><span class="count">notes[]</span></div>
+          <div class="meta">On-site field notes: who dominated the room, side conversations, candid stance.</div>
+        </div>
+
+        <div class="src opp future hidden-mvp" data-src="opp" onclick="activateSrc('opp')">
+          <div class="src-head"><span class="dot"></span><span class="name">Opportunity Context</span><span class="count">header + notes</span></div>
+          <div class="meta">Deal size band, LoB, country, stage, strategic-flag, partyRoles, hyperNotes[].</div>
+        </div>
+
+        <div class="src phone future hidden-mvp" data-src="phone" onclick="activateSrc('phone')">
+          <div class="src-head"><span class="dot"></span><span class="name">Phone Call Transcript</span><span class="count">transcript</span></div>
+          <div class="meta">Spoken words from discovery / negotiation calls. ASR-cleaned.</div>
+        </div>
+
+        <div class="src linkedin future hidden-mvp" data-src="linkedin" onclick="activateSrc('linkedin')">
+          <div class="src-head"><span class="dot"></span><span class="name">LinkedIn (Sales Navigator)</span><span class="count">profile</span></div>
+          <div class="meta">Validated title, tenure, shared connections, recent activity.</div>
+        </div>
+      </div>
+
+      <!-- Column 2: Pipeline stages -->
+      <div class="col pipeline" id="col-pipe">
+        <div class="col-head">AI pipeline</div>
+
+        <div class="stage" id="stage-extract">
+          <div class="stage-head"><div class="stage-ico">◇</div><div class="stage-title">1. Signal extraction</div></div>
+          <div class="stage-desc">Per-contact and per-pair snippets are pulled from the last 90 days. Title + department come free from <code>BusinessPartner</code>; language cues come from unstructured text.</div>
+        </div>
+
+        <div class="stage" id="stage-prompt">
+          <div class="stage-head"><div class="stage-ico">▲</div><div class="stage-title">2. Grounded prompt</div></div>
+          <div class="stage-desc">Role prompt: contact + interactions → role taxonomy (Decision Maker · Champion · Influencer · Blocker · Unknown).<br>Relationship prompt: pair + shared context → directional <b>Influences</b> edge, with confidence and evidence.</div>
+        </div>
+
+        <div class="stage" id="stage-llm">
+          <div class="stage-head"><div class="stage-ico">✺</div><div class="stage-title">3. GenAI classifier</div></div>
+          <div class="stage-desc">Routed on <b>SAP AI Core</b>. Returns <code>{role, confidence, evidence[]}</code> and <code>{direction, confidence, evidence[]}</code>. Data never leaves the tenant boundary.</div>
+        </div>
+
+        <div class="stage" id="stage-review">
+          <div class="stage-head"><div class="stage-ico">◉</div><div class="stage-title">4. Rep review &amp; feedback</div></div>
+          <div class="stage-desc">Suggestions surface as <b>dashed edges</b> and badges. Rep can accept → solid, edit direction, or reject. Every action logs ground truth for model improvement.</div>
+        </div>
+      </div>
+
+      <!-- Column 3: Outputs -->
+      <div class="col" id="col-out">
+        <div class="col-head">Buying Center — on the Account</div>
+
+        <div class="out" id="out-roles">
+          <div class="out-head"><span class="out-ico">◆</span>Role suggestions per contact</div>
+          <div class="out-list" id="rolesList">
+            <div class="out-item" data-contacts="katrin" data-signals="appt,email">
+              <span class="role-tag dm">Decision Maker</span><span class="nm">Katrin Hoffmann</span><span class="conf">High</span>
+            </div>
+            <div class="out-item" data-contacts="sabine" data-signals="email,appt">
+              <span class="role-tag champion">Champion</span><span class="nm">Sabine Werner</span><span class="conf">High</span>
+            </div>
+            <div class="out-item" data-contacts="ingrid" data-signals="appt,visit">
+              <span class="role-tag influencer">Influencer</span><span class="nm">Ingrid Vogel</span><span class="conf">High</span>
+            </div>
+            <div class="out-item" data-contacts="thomas" data-signals="email,visit">
+              <span class="role-tag blocker">Blocker</span><span class="nm">Thomas Richter</span><span class="conf">Med</span>
+            </div>
+            <div class="out-item" data-contacts="markus" data-signals="appt">
+              <span class="role-tag dm">Decision Maker</span><span class="nm">Markus Albrecht</span><span class="conf">Med</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="out" id="out-rels">
+          <div class="out-head"><span class="out-ico">⇄</span>Influence relationships</div>
+          <div class="graph-out" id="relsList">
+            <div class="edge-row dashed" data-signals="email">
+              <span class="from">Sabine</span><span class="arrow">→</span><span class="from">Katrin</span><span class="lbl">Influences · High</span>
+            </div>
+            <div class="edge-row dashed" data-signals="appt,email">
+              <span class="from">Thomas</span><span class="arrow">→</span><span class="from">Markus</span><span class="lbl">Influences · Med</span>
+            </div>
+            <div class="edge-row dashed" data-signals="visit">
+              <span class="from">Ingrid</span><span class="arrow">→</span><span class="from">Katrin</span><span class="lbl">Influences · Med</span>
+            </div>
+            <div class="edge-row dashed" data-signals="email">
+              <span class="from">Katrin</span><span class="arrow">↔</span><span class="from">Markus</span><span class="lbl">Bidirectional · Med</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="legend">
+      <div class="li"><span class="sw" style="background:var(--email)"></span>Email</div>
+      <div class="li"><span class="sw" style="background:var(--appt)"></span>Appointment note</div>
+      <div class="li"><span class="sw" style="background:var(--visit)"></span>Visit note</div>
+      <div class="li"><span class="sw" style="background:var(--future);opacity:.8"></span>Phase 2 source</div>
+      <div class="li"><span class="sw" style="background:var(--panel-2);border-color:var(--accent)"></span>Lit path = selected source</div>
+      <div class="li"><span class="sw" style="background:transparent;border:1px dashed var(--ink-dim)"></span>Dashed edge = AI-suggested, not yet confirmed</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- Worked example -->
+<!-- ============================================================ -->
+<section>
+  <h2><span class="step">2</span>Worked example — Weiland Bau, €1.78M framework</h2>
+  <p class="lede">A single appointment note illustrates how one artifact seeds <b>three different role inferences</b> and <b>two influence edges</b> on the same account. Signals are highlighted; hover any yellow phrase to see what the model picked up.</p>
+
+  <div class="example">
+    <div class="example-head">
+      <h3>Appointment: Discovery meeting at Weiland HQ</h3>
+      <span class="scenario-pill">2026-10-14 · Lena Müller (rep)</span>
+    </div>
+
+    <div class="example-grid">
+
+      <!-- Snippet -->
+      <div class="example-col">
+        <h4>▸ Rep-authored note</h4>
+        <div class="snippet">Attendees: Katrin Hoffmann (CFO), Sabine Werner (Head of Fleet &amp; Equipment), Thomas Richter (IT Infra).
+
+<span class="signal">Katrin asked about total cost of ownership</span> and <span class="signal">whether 3-year commitment is the right framework</span>. She made clear that <span class="signal">her sign-off is required</span> before procurement moves forward.
+
+<span class="signal">Sabine introduced us to Katrin</span> and <span class="signal">pushed back internally when Thomas raised the Hilti alternative</span>. She shared a <span class="signal">one-pager she drafted comparing our TrackMyTools against their current process</span>.
+
+<span class="signal">Thomas spent most of the meeting defending the current Hilti setup</span> and asked <span class="signal">why we couldn't just extend their existing contract</span>. He <span class="signal">deferred to Markus Albrecht on cost questions</span> but was clearly skeptical.</div>
+      </div>
+
+      <!-- Signals extracted -->
+      <div class="example-col">
+        <h4>▸ Signals extracted</h4>
+        <ul class="signals">
+          <li><b>budget approval</b> + <b>sign off</b> → Decision Maker cue (Katrin)</li>
+          <li><b>total cost / ROI framing</b> → Decision Maker cue (Katrin)</li>
+          <li><b>introduced us to</b> → Champion cue (Sabine) + edge Sabine → Katrin</li>
+          <li><b>pushed back internally</b> → Champion advocacy (Sabine)</li>
+          <li><b>shared drafted one-pager</b> → Champion "we"-ownership (Sabine)</li>
+          <li><b>defending current / why not extend</b> → Blocker status-quo (Thomas)</li>
+          <li><b>deferred to Markus on cost</b> → edge Thomas → Markus</li>
+        </ul>
+      </div>
+
+      <!-- Results produced -->
+      <div class="example-col">
+        <h4>▸ GenAI output</h4>
+        <div class="result-card">
+          <div class="r-line"><span class="role-tag dm">Decision Maker</span><span class="r-name">Katrin Hoffmann</span><span class="conf" style="margin-left:auto;color:var(--ink-faint);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em">High</span></div>
+          <div class="r-ev">"sign-off required", "total cost of ownership", "3-year commitment".</div>
+        </div>
+        <div class="result-card">
+          <div class="r-line"><span class="role-tag champion">Champion</span><span class="r-name">Sabine Werner</span><span class="conf" style="margin-left:auto;color:var(--ink-faint);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em">High</span></div>
+          <div class="r-ev">Introduced us; shared drafted comparison; defended us when Hilti was raised.</div>
+        </div>
+        <div class="result-card">
+          <div class="r-line"><span class="role-tag blocker">Blocker</span><span class="r-name">Thomas Richter</span><span class="conf" style="margin-left:auto;color:var(--ink-faint);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em">Medium</span></div>
+          <div class="r-ev">Defended incumbent Hilti; asked to extend current contract.</div>
+        </div>
+        <div class="result-card" style="border-color:var(--accent)">
+          <div class="r-line" style="margin-bottom:4px"><b style="color:var(--accent);font-size:11px;letter-spacing:.05em;text-transform:uppercase">Edges</b></div>
+          <div class="r-ev">Sabine → Katrin (<i>introduced</i>) · Thomas → Markus (<i>deferred to on cost</i>)</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- How it fits + Phase 2 -->
+<!-- ============================================================ -->
+<section>
+  <h2><span class="step">3</span>Today vs. Phase 2 — adding Opportunity to the loop</h2>
+  <p class="lede">Today, the pipeline is grounded in interactions that are already captured against the <b>Account</b>. In Phase 2, the <b>Opportunity</b> becomes a first-class input and output — the buying center lives per-deal, not just per-account, and opportunity attributes also drive party determination directly.</p>
+
+  <div class="fits">
+
+    <div class="fits-card">
+      <h3>MVP — what ships first</h3>
+      <ul>
+        <li><b>Scope:</b> Buying Center on the Account Detail page, 4 roles (DM · Champion · Influencer · Blocker) + "Influences" edge type.</li>
+        <li><b>Inputs:</b> Email <code>plainContent</code>, Appointment <code>notes[]</code>, Visit <code>notes[]</code>, 90-day window.</li>
+        <li><b>Output:</b> badged role with confidence + 2–3 evidence snippets; dashed edges on a relationship graph.</li>
+        <li><b>Rep control:</b> accept / edit / reject every suggestion. Manual overrides are logged and excluded from re-inference on that pair.</li>
+        <li><b>Data residency:</b> prompt + context stays within SAP AI Core on the customer's BTP tenant — no third-party egress.</li>
+      </ul>
+    </div>
+
+    <div class="fits-card highlight">
+      <h3>Phase 2 — Opportunity in the loop</h3>
+      <ul>
+        <li><b>New input — Opportunity context:</b> header (size band, LoB, country, stage, strategic flag), <code>partyRoles</code> already assigned by the rep, <code>notes[]</code> / <code>hyperNotes[]</code>.</li>
+        <li><b>Per-deal buying center:</b> same contact can be a Champion on one deal and an Influencer on another — role is deal-scoped, not just account-scoped.</li>
+        <li><b>Cross-signal with Party Determination:</b> opportunity attributes already drive <code>From Business Rules</code> party determination for Owner / Sales Employee / Sales Unit. AI suggests rule rows from historical outcomes; admin activates. Rules still run at determination time.</li>
+        <li><b>Relationship subtypes:</b> expand from "Influences" to <code>Reports To</code>, <code>Advocates For</code>, <code>Opposes</code>, <code>Works With</code>, <code>Mentors</code>.</li>
+        <li><b>Warmest-path surfacing:</b> "Your closest confirmed path to the DM on this opportunity is <i>You → Sabine → Katrin</i>."</li>
+        <li><b>Additional sources:</b> Phone Call transcripts, LinkedIn (if Sales Navigator is integrated) — same prompt shape, richer signal.</li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- Guardrails -->
+<!-- ============================================================ -->
+<section>
+  <h2><span class="step">4</span>Guardrails — what the AI will and will not do</h2>
+  <div class="fits">
+    <div class="fits-card">
+      <h3>Will</h3>
+      <ul>
+        <li>Suggest roles and influence edges, always with confidence + evidence.</li>
+        <li>Stay within the rep's own authorization scope — only contacts the rep can already see.</li>
+        <li>Log every accept / edit / reject for model improvement.</li>
+        <li>Return "Unknown" when interaction history is thin, rather than guessing.</li>
+      </ul>
+    </div>
+    <div class="fits-card">
+      <h3>Will not</h3>
+      <ul>
+        <li>Overwrite rep-confirmed roles or edges silently — dashed edges never auto-promote to solid.</li>
+        <li>Grant visibility to contacts the rep is not authorized to see.</li>
+        <li>Override the Party Determination scheme or change <code>DetMeth</code> on successful rule-based determinations.</li>
+        <li>Send prompt payloads outside the SAP AI Core tenant boundary.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div class="footer-nav">
+  <a href="https://yogeshi307035.github.io/buying-center-journey/">← Weiland journey (roles + relationships)</a>
+  <span class="note">AI Pipeline · Buying Center · SAP Sales Cloud V2</span>
+</div>
+
+</div>
+
+<script>
+// ------------------------------------------------------------
+// Phase toggle (MVP / Phase 2)
+// ------------------------------------------------------------
+let phase = 'mvp';
+function setPhase(p){
+  phase = p;
+  document.getElementById('btnMvp').classList.toggle('active', p==='mvp');
+  document.getElementById('btnPhase2').classList.toggle('active', p==='phase2');
+  document.querySelectorAll('.src.future').forEach(el => {
+    el.style.display = (p === 'phase2') ? '' : 'none';
+  });
+  const note = document.getElementById('phaseNote');
+  if (p === 'mvp'){
+    note.innerHTML = '<b>MVP:</b> role + influence inferred from Email, Appointment Notes, Visit Notes — the activity data already in Sales Cloud V2 today.';
+  } else {
+    note.innerHTML = '<b>Phase 2:</b> Opportunity context, Phone Call transcripts and LinkedIn add stronger signals; the Buying Center becomes per-deal, not just per-account.';
+  }
+  // Redraw connector lines after layout change
+  requestAnimationFrame(drawLines);
+}
+
+// ------------------------------------------------------------
+// Which source feeds which roles / edges (illustrative mapping)
+// ------------------------------------------------------------
+const SRC_HITS = {
+  email:    { roles: ['katrin','sabine','thomas'],          edges: [0,1,3] },
+  appt:     { roles: ['katrin','sabine','ingrid','markus'], edges: [1,2] },
+  visit:    { roles: ['ingrid','thomas'],                   edges: [2] },
+  opp:      { roles: ['markus','katrin'],                   edges: [0,3] },
+  phone:    { roles: ['katrin','sabine'],                   edges: [0] },
+  linkedin: { roles: ['katrin','markus','ingrid'],          edges: [] },
+};
+const STAGES = ['stage-extract','stage-prompt','stage-llm','stage-review'];
+
+function clearActive(){
+  document.querySelectorAll('.src.active').forEach(e => e.classList.remove('active'));
+  document.querySelectorAll('.stage.lit').forEach(e => e.classList.remove('lit'));
+  document.querySelectorAll('.out.lit').forEach(e => e.classList.remove('lit'));
+  document.querySelectorAll('.out-item.highlight').forEach(e => e.classList.remove('highlight'));
+  document.querySelectorAll('.edge-row.highlight').forEach(e => e.classList.remove('highlight'));
+  document.querySelectorAll('svg.lines path.lit').forEach(e => e.classList.remove('lit'));
+}
+
+function activateSrc(key){
+  const el = document.querySelector(`.src[data-src="${key}"]`);
+  if (el && el.classList.contains('active')){
+    clearActive();
+    return;
+  }
+  clearActive();
+  if (el) el.classList.add('active');
+
+  STAGES.forEach(id => document.getElementById(id).classList.add('lit'));
+  document.getElementById('out-roles').classList.add('lit');
+  document.getElementById('out-rels').classList.add('lit');
+
+  const hit = SRC_HITS[key] || {roles:[],edges:[]};
+  hit.roles.forEach(c => {
+    const item = document.querySelector(`.out-item[data-contacts="${c}"]`);
+    if (item) item.classList.add('highlight');
+  });
+  const rows = document.querySelectorAll('#relsList .edge-row');
+  hit.edges.forEach(i => { if (rows[i]) rows[i].classList.add('highlight'); });
+
+  document.querySelectorAll(`svg.lines path[data-from="${key}"]`).forEach(p => p.classList.add('lit'));
+  document.querySelectorAll('svg.lines path[data-pipe="true"]').forEach(p => p.classList.add('lit'));
+}
+
+// ------------------------------------------------------------
+// Draw SVG connector lines between source → pipeline → outputs
+// ------------------------------------------------------------
+function drawLines(){
+  const svg = document.getElementById('lines');
+  const container = document.getElementById('diagram');
+  if (!svg || !container) return;
+
+  const cRect = container.getBoundingClientRect();
+  svg.setAttribute('viewBox', `0 0 ${cRect.width} ${cRect.height}`);
+  svg.innerHTML = '';
+
+  const extract = document.getElementById('stage-extract');
+  const review  = document.getElementById('stage-review');
+  const outRoles = document.getElementById('out-roles');
+  const outRels  = document.getElementById('out-rels');
+
+  const r = el => {
+    const b = el.getBoundingClientRect();
+    return {
+      left:   b.left   - cRect.left,
+      right:  b.right  - cRect.left,
+      top:    b.top    - cRect.top,
+      bottom: b.bottom - cRect.top,
+      midY:   (b.top + b.bottom)/2 - cRect.top,
+    };
+  };
+
+  const extR = r(extract);
+  const revR = r(review);
+  const outR1 = r(outRoles);
+  const outR2 = r(outRels);
+
+  // Source → extract
+  document.querySelectorAll('.src').forEach(src => {
+    if (src.style.display === 'none') return;
+    const sr = r(src);
+    const x1 = sr.right, y1 = sr.midY;
+    const x2 = extR.left, y2 = extR.midY;
+    const cx = (x1 + x2) / 2;
+    const d = `M ${x1} ${y1} C ${cx} ${y1}, ${cx} ${y2}, ${x2} ${y2}`;
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d', d);
+    path.setAttribute('data-from', src.dataset.src);
+    svg.appendChild(path);
+  });
+
+  // Review → outputs (2 lines)
+  [outR1, outR2].forEach(oR => {
+    const x1 = revR.right, y1 = revR.midY;
+    const x2 = oR.left, y2 = oR.midY;
+    const cx = (x1 + x2) / 2;
+    const d = `M ${x1} ${y1} C ${cx} ${y1}, ${cx} ${y2}, ${x2} ${y2}`;
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d', d);
+    path.setAttribute('data-pipe', 'true');
+    svg.appendChild(path);
+  });
+}
+
+window.addEventListener('load', () => {
+  // Hide phase-2 sources on load
+  document.querySelectorAll('.src.future').forEach(el => el.style.display = 'none');
+  drawLines();
+});
+window.addEventListener('resize', drawLines);
+</script>
+
+</body>
+</html>
